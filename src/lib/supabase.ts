@@ -69,6 +69,7 @@ export interface Product {
   material?: string;
   longDescription?: string;
   created_at?: string;
+  image?: string;
   model?: string;
   technology?: string;
   cabin?: any;
