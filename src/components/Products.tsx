@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PRODUCTS } from '../constants';
 import { ArrowRight, X, Cog, Zap, MoveUp, Globe, User, Phone, CheckCircle2 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { supabase, Product } from '../lib/supabase';
 import { useForm } from 'react-hook-form';
 import { sendToTelegram } from '../lib/telegram';
 
@@ -46,8 +46,8 @@ function ImageCarousel({ images, title }: { images: string[], title: string }) {
 }
 
 export default function Products() {
-  const [selectedProduct, setSelectedProduct] = React.useState<typeof PRODUCTS[0] | null>(null);
-  const [products, setProducts] = React.useState<typeof PRODUCTS>(PRODUCTS);
+  const [selectedProduct, setSelectedProduct] = React.useState<Product | null>(null);
+  const [products, setProducts] = React.useState<Product[]>(PRODUCTS as unknown as Product[]);
   const [showQuoteForm, setShowQuoteForm] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
@@ -121,7 +121,7 @@ export default function Products() {
               onClick={() => setSelectedProduct(product)}
             >
               <div className="relative h-[550px] rounded-[40px] overflow-hidden mb-10 shadow-2xl transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-fuji-blue/20">
-                <ImageCarousel images={product.images} title={product.title} />
+                <ImageCarousel images={product.images || []} title={product.title} />
                 
                 <div className="absolute top-8 left-8">
                   <span className="px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-[9px] font-black uppercase tracking-widest text-white">
@@ -183,7 +183,7 @@ export default function Products() {
               </button>
 
                 <div className="w-full lg:w-1/2 h-[40%] lg:h-full relative shrink-0">
-                   <ImageCarousel images={selectedProduct.images} title={selectedProduct.title} />
+                   <ImageCarousel images={selectedProduct.images || []} title={selectedProduct.title} />
                 </div>
 
                 <div className="w-full lg:w-1/2 p-8 lg:p-16 flex flex-col overflow-y-auto bg-white relative z-10">
