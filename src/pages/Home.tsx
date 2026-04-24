@@ -31,6 +31,7 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <Navbar />
+      {/* @ts-ignore */}
       <Hero title={heroData.heroTitle} desc={heroData.heroDesc} bg={heroData.heroImage} />
       <Products />
       {/* About Section */}

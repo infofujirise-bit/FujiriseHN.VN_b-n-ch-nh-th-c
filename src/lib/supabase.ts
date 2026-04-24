@@ -69,6 +69,9 @@ export interface Product {
   material?: string;
   longDescription?: string;
   created_at?: string;
+  model?: string;
+  technology?: string;
+  cabin?: any;
 }
 
 export interface PageView {
