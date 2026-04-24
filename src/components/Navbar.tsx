@@ -84,6 +84,7 @@ export default function Navbar() {
               alt="Fujirise Logo"
               onError={(e) => {
                 e.currentTarget.src = logo != "" ? logo : logoLocal;
+                e.currentTarget.src = logo != "" ? logo : "/logo.svg";
               }}
               className="h-12 md:h-16 w-auto object-contain hover:scale-105 transition-transform duration-500 drop-shadow-md"
             />
