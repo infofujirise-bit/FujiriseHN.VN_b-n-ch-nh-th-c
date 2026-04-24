@@ -787,7 +787,7 @@ function ProductManager() {
     }
 
     try {
-      const newUrls = await Promise.all(filesToUpload.map(async (file) => {
+      const newUrls = await Promise.all(filesToUpload.map(async (file: File) => {
         const isMock = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
         if (isMock) {
           // Trả về local object URL để xem trước ngay lập tức nếu chưa cấu hình Supabase
