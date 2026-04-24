@@ -301,7 +301,7 @@ export default function Admin() {
           className="bg-white/10 backdrop-blur-3xl border border-white/20 w-full max-w-sm rounded-[40px] p-10 shadow-2xl relative z-10"
         >
           <div className="text-center mb-10">
-            <img src={sysLogo} onError={(e) => { e.currentTarget.src = '/logo.svg' }} alt="Fujirise Logo" className="h-16 md:h-20 w-auto object-contain mx-auto mb-6 rounded-2xl bg-white p-3 shadow-2xl hover:scale-110 transition-transform duration-500" />
+            <img src={sysLogo} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo.svg'; }} alt="Fujirise Logo" className="h-16 md:h-20 w-auto object-contain mx-auto mb-6 rounded-2xl bg-white p-3 shadow-2xl hover:scale-110 transition-transform duration-500" />
             <p className="text-white/70 text-[10px] uppercase font-black tracking-[0.3em] mt-4">Hệ quản trị an toàn</p>
           </div>
 
@@ -360,7 +360,7 @@ export default function Admin() {
     <div className="h-screen w-full bg-slate-50 flex overflow-hidden">
       <aside className="w-72 bg-fuji-blue text-white flex flex-col h-full shrink-0 z-40 relative shadow-2xl">
         <div className="p-8 pb-12 flex items-center justify-center gap-3 shrink-0">
-          <img src={sysLogo} onError={(e) => { e.currentTarget.src = '/logo.svg' }} alt="Logo" className="h-10 md:h-12 w-auto object-contain bg-white rounded-xl p-2 shadow-xl hover:scale-105 transition-transform cursor-pointer" />
+          <img src={sysLogo} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo.svg'; }} alt="Logo" className="h-10 md:h-12 w-auto object-contain bg-white rounded-xl p-2 shadow-xl hover:scale-105 transition-transform cursor-pointer" />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-4 space-y-1 pb-6">
@@ -788,15 +788,15 @@ function ProductManager() {
       } else {
         setProducts(PRODUCTS.map((p: any) => ({
           ...p,
-          model: 'FUH220S',
+          model: 'GEH100S - Thang không đối trọng, công nghệ cáp dẹt',
           category: 'Thang máy Homelife',
           technology: 'Cáp kéo',
+          specs: { load: '350kg', speed: '0.4 m/s', pit: '250mm', oh: '2850 mm', travel: '< hoặc = 15m', stops: '< hoặc = 6', door: 'Mở tâm 2 cánh, mở 1 cánh, mở bản lề tự động', structure: 'Hố thang xây hoặc hố sử dụng khung hợp kim nhôm / Khung thép' },
           cabin: {
-            trần: 'Hệ đèn LED thiết kế tinh tế...',
-            vách_bên: 'Thép không gỉ cao cấp...',
-            vách_sau: 'Điểm nhấn với bề mặt thép...',
-            vách_trước: 'Thép không gỉ chống bám vân tay...',
-            sàn: 'Đá Marble cao cấp...'
+            material: 'Lựa chọn linh hoạt giữa inox sọc nhuyễn, inox hoa văn tinh xảo hoặc kính cường lực hiện đại, phù hợp nhiều phong cách thiết kế.',
+            backWall: 'Tạo điểm nhấn đẳng cấp, nâng tầm thẩm mỹ không gian nội thất.',
+            floor: 'Chống trơn trượt, dễ vệ sinh, đảm bảo an toàn và độ bền trong quá trình sử dụng.',
+            ceiling: 'Hệ thống chiếu sáng với hiệu ứng ánh sáng hiện đại, mang lại cảm giác ấm cúng và sang trọng.'
           }
         })) as Product[]);
       }
@@ -868,8 +868,8 @@ function ProductManager() {
             model: '', 
             category: 'Thang máy Homelife', 
             technology: 'Cáp kéo', 
-            specs: { load: '', speed: '', pit: '', oh: '', travel: '', stops: '', origin: '', material: '' }, 
-            cabin: { trần: '', vách_bên: '', vách_sau: '', vách_trước: '', sàn: '' } 
+            specs: { load: '', speed: '', pit: '', oh: '', travel: '', stops: '', door: '', structure: '' }, 
+            cabin: { material: '', backWall: '', floor: '', ceiling: '' } 
           } as Product)}
           className="px-6 py-3 bg-fuji-accent text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 group hover:bg-fuji-blue transition-all"
         >
@@ -924,7 +924,7 @@ function ProductManager() {
               </div>
               <div className="space-y-1">
                 <p className="text-[8px] text-fuji-accent font-black uppercase">Cabin Detail</p>
-                <p className="text-[10px] text-slate-500 line-clamp-2 italic font-medium leading-relaxed">Trần: {product.cabin?.trần || 'Chưa cập nhật'}</p>
+                <p className="text-[10px] text-slate-500 line-clamp-2 italic font-medium leading-relaxed">Vật liệu: {product.cabin?.material || 'Chưa cập nhật'}</p>
               </div>
             </div>
           </div>
@@ -960,16 +960,15 @@ function ProductManager() {
                       oh: (formData.get('oh') as string) || isEditing?.specs?.oh,
                       travel: (formData.get('travel') as string) || isEditing?.specs?.travel,
                       stops: (formData.get('stops') as string) || isEditing?.specs?.stops,
-                      origin: (formData.get('origin') as string) || isEditing?.specs?.origin,
-                      material: (formData.get('material') as string) || isEditing?.specs?.material,
+                      door: (formData.get('door') as string) || isEditing?.specs?.door,
+                      structure: (formData.get('structure') as string) || isEditing?.specs?.structure,
                     },
                     cabin: {
                       ...(isEditing?.cabin || {}),
-                      trần: (formData.get('trần') as string) || isEditing?.cabin?.trần,
-                      vách_bên: (formData.get('vách_bên') as string) || isEditing?.cabin?.vách_bên,
-                      vách_sau: (formData.get('vách_sau') as string) || isEditing?.cabin?.vách_sau,
-                      vách_trước: (formData.get('vách_trước') as string) || isEditing?.cabin?.vách_trước,
-                      sàn: (formData.get('sàn') as string) || isEditing?.cabin?.sàn,
+                      material: (formData.get('material') as string) || isEditing?.cabin?.material,
+                      backWall: (formData.get('backWall') as string) || isEditing?.cabin?.backWall,
+                      floor: (formData.get('floor') as string) || isEditing?.cabin?.floor,
+                      ceiling: (formData.get('ceiling') as string) || isEditing?.cabin?.ceiling,
                     }
                   };
 
@@ -1039,19 +1038,18 @@ function ProductManager() {
                           <Input name="oh" label="OH" defaultValue={isEditing?.specs?.oh} />
                           <Input name="travel" label="Hành trình" defaultValue={isEditing?.specs?.travel} />
                           <Input name="stops" label="Điểm dừng" defaultValue={isEditing?.specs?.stops} />
-                          <Input name="origin" label="Nguồn gốc" defaultValue={isEditing?.specs?.origin} />
-                          <Input name="material" label="Vật liệu" defaultValue={isEditing?.specs?.material} />
+                          <Input name="door" label="Cửa mở" defaultValue={isEditing?.specs?.door} />
+                          <Input name="structure" label="Cấu trúc" defaultValue={isEditing?.specs?.structure} />
                        </div>
                     </div>
                  </div>
                  <div className="space-y-4">
                     <p className="text-[10px] font-black uppercase tracking-widest text-fuji-accent border-b pb-2">Chi tiết Cabin</p>
-                    <div className="grid md:grid-cols-2 gap-6">
-                       <Textarea name="trần" label="Trần" defaultValue={isEditing?.cabin?.trần} />
-                       <Textarea name="vách_bên" label="Vách bên" defaultValue={isEditing?.cabin?.vách_bên} />
-                       <Textarea name="vách_sau" label="Vách sau" defaultValue={isEditing?.cabin?.vách_sau} />
-                       <Textarea name="vách_trước" label="Vách trước" defaultValue={isEditing?.cabin?.vách_trước} />
-                       <Textarea name="sàn" label="Sàn" defaultValue={isEditing?.cabin?.sàn} />
+                    <div className="grid md:grid-cols-1 gap-6">
+                       <Textarea name="material" label="Chất liệu cabin cao cấp" defaultValue={isEditing?.cabin?.material} />
+                       <Textarea name="backWall" label="Vách sau ốp đá" defaultValue={isEditing?.cabin?.backWall} />
+                       <Textarea name="floor" label="Sàn PVC" defaultValue={isEditing?.cabin?.floor} />
+                       <Textarea name="ceiling" label="Trần đèn trang trí" defaultValue={isEditing?.cabin?.ceiling} />
                     </div>
                  </div>
                  <div className="flex gap-4 pt-6">
@@ -1224,6 +1222,39 @@ function ConfiguratorManager() {
 
 function WarrantyManager() {
   const [content, setContent] = React.useState('Chính sách bảo hành Fujirise: 24 tháng cho mọi linh kiện...');
+  const [isSaving, setIsSaving] = React.useState(false);
+  const [lastUpdated, setLastUpdated] = React.useState('');
+
+  React.useEffect(() => {
+    const loadContent = async () => {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      if (data?.content_dict?.warranty) {
+        setContent(data.content_dict.warranty.content);
+        setLastUpdated(data.content_dict.warranty.updatedAt);
+      }
+    };
+    loadContent();
+  }, []);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      const currentDict = data?.content_dict || {};
+      const now = new Date().toLocaleString('vi-VN');
+      currentDict.warranty = { content, updatedAt: now };
+      
+      await supabase.from('site_settings').update({ content_dict: currentDict }).eq('id', 'default');
+      setLastUpdated(now);
+      alert('Đã cập nhật chính sách bảo hành!');
+    } catch (err) {
+      console.error(err);
+      alert('Có lỗi khi lưu!');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-[50px] p-12 border shadow-sm max-w-4xl mx-auto">
        <div className="flex items-center gap-4 mb-10">
@@ -1244,9 +1275,17 @@ function WarrantyManager() {
           />
           <div className="flex justify-between items-center bg-fuji-line p-6 rounded-3xl">
              <div className="flex items-center gap-2 text-slate-400">
-               <Clock size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">Cập nhật lần cuối: Hôm nay, 09:37</span>
+               <Clock size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">
+                 {lastUpdated ? `Cập nhật: ${lastUpdated}` : 'Chưa có bản cập nhật nào'}
+               </span>
              </div>
-             <button className="px-12 py-5 bg-fuji-blue text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-fuji-accent transition-all active:scale-95">Cập nhật chính sách</button>
+             <button 
+               onClick={handleSave}
+               disabled={isSaving}
+               className="px-12 py-5 bg-fuji-blue text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-fuji-accent transition-all active:scale-95 disabled:opacity-50"
+             >
+               {isSaving ? 'Đang lưu...' : 'Cập nhật chính sách'}
+             </button>
           </div>
        </div>
     </div>
@@ -1419,7 +1458,7 @@ function WebContentManager() {
              <div className="space-y-2 col-span-2 md:col-span-1">
                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">Logo Website</label>
                <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoImage')} className="w-full px-4 py-3 bg-slate-50 rounded-2xl text-xs font-bold text-slate-500 cursor-pointer" />
-               {content.logoImage && <img src={content.logoImage} onError={(e) => { e.currentTarget.src = '/logo.svg' }} alt="Logo" className="h-16 w-auto object-contain mt-2 p-2 bg-slate-100 rounded-xl" />}
+               {content.logoImage && <img src={content.logoImage} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo.svg'; }} alt="Logo" className="h-16 w-auto object-contain mt-2 p-2 bg-slate-100 rounded-xl" />}
              </div>
              <div className="space-y-2">
                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">Ảnh nền Trang chủ (Hero/Menu)</label>

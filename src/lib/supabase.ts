@@ -72,8 +72,8 @@ export interface Product {
     oh?: string;
     travel?: string;
     stops?: string;
-    origin?: string;
-    material?: string;
+    door?: string;
+    structure?: string;
   };
   material?: string;
   longDescription?: string;
@@ -82,11 +82,10 @@ export interface Product {
   model?: string;
   technology?: string;
   cabin?: {
-    trần?: string;
-    vách_bên?: string;
-    vách_sau?: string;
-    vách_trước?: string;
-    sàn?: string;
+    material?: string;
+    backWall?: string;
+    floor?: string;
+    ceiling?: string;
   };
 }
 

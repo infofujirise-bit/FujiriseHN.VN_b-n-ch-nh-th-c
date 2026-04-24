@@ -31,7 +31,7 @@ export default function Footer() {
               <img 
                 src={logo} 
                 alt="Fujirise Logo" 
-                onError={(e) => { e.currentTarget.src = '/logo.svg' }}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo.svg'; }}
                 className="h-16 md:h-24 w-auto object-contain hover:scale-105 transition-transform duration-500 shadow-xl bg-white p-2.5 rounded-2xl"
               />
             </a>

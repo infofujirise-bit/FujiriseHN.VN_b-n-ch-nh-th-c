@@ -1,28 +1,41 @@
-import React from 'react';
-import { Phone, Mail, MapPin, Facebook, MessageCircle, Menu, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { CONTACT_INFO, NAVIGATION } from '../constants';
-import { cn } from '../lib/utils';
-import { supabase } from '../lib/supabase';
+import React from "react";
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Facebook,
+  MessageCircle,
+  Menu,
+  X,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { CONTACT_INFO, NAVIGATION } from "../constants";
+import { cn } from "../lib/utils";
+import { supabase } from "../lib/supabase";
+import logoLocal from "../../logo.svg";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
-  const [logo, setLogo] = React.useState('/logo.svg');
+  const [logo, setLogo] = React.useState("");
 
   React.useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
 
     const fetchLogo = async () => {
-      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      const { data } = await supabase
+        .from("site_settings")
+        .select("content_dict")
+        .eq("id", "default")
+        .single();
       if (data?.content_dict?.web_content?.logoImage) {
         setLogo(data.content_dict.web_content.logoImage);
       }
     };
     fetchLogo();
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
@@ -31,34 +44,47 @@ export default function Navbar() {
       <div className="hidden md:block bg-fuji-blue text-white/50 py-2 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center text-[9px] font-black uppercase tracking-[0.25em]">
           <div className="flex gap-8">
-            <a href={`mailto:${CONTACT_INFO.email}`} className="flex items-center gap-2 hover:text-white transition-colors">
-              <Mail size={10} strokeWidth={3} className="text-fuji-accent" /> {CONTACT_INFO.email}
+            <a
+              href={`mailto:${CONTACT_INFO.email}`}
+              className="flex items-center gap-2 hover:text-white transition-colors"
+            >
+              <Mail size={10} strokeWidth={3} className="text-fuji-accent" />{" "}
+              {CONTACT_INFO.email}
             </a>
             <p className="flex items-center gap-2">
-              <MapPin size={10} strokeWidth={3} className="text-fuji-accent" /> Mỗ Lao, Hà Đông, Hà Nội
+              <MapPin size={10} strokeWidth={3} className="text-fuji-accent" />{" "}
+              Mỗ Lao, Hà Đông, Hà Nội
             </p>
           </div>
           <div className="flex gap-6 items-center">
-            <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /></span>
+            <span className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            </span>
             <div className="w-px h-3 bg-white/10" />
-            <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
+            <a href="#faq" className="hover:text-white transition-colors">
+              FAQ
+            </a>
           </div>
         </div>
       </div>
 
-      <nav className={cn(
-        "transition-all duration-500",
-        scrolled 
-          ? "bg-white shadow-2xl shadow-fuji-blue/5 py-2" 
-          : "bg-white py-3"
-      )}>
+      <nav
+        className={cn(
+          "transition-all duration-500",
+          scrolled
+            ? "bg-white shadow-2xl shadow-fuji-blue/5 py-2"
+            : "bg-white py-3",
+        )}
+      >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-8">
           {/* Logo Left */}
           <a href="/" className="flex items-center group shrink-0">
-            <img 
-              src={logo} 
-              alt="Fujirise Logo" 
-              onError={(e) => { e.currentTarget.src = '/logo.svg' }}
+            <img
+              src={logo != "" ? logo : logoLocal}
+              alt="Fujirise Logo"
+              onError={(e) => {
+                e.currentTarget.src = logo != "" ? logo : logoLocal;
+              }}
               className="h-12 md:h-16 w-auto object-contain hover:scale-105 transition-transform duration-500 drop-shadow-md"
             />
           </a>
@@ -80,13 +106,21 @@ export default function Navbar() {
           {/* Call to Action Right */}
           <div className="hidden md:flex items-center gap-6 shrink-0">
             <div className="text-right">
-              <p className="text-[9px] text-fuji-accent uppercase font-black tracking-widest leading-none mb-1">Hotline Tư vấn</p>
-              <a href={`tel:${CONTACT_INFO.hotline}`} className="text-fuji-blue font-black text-xl tracking-tight leading-none hover:opacity-70 transition-all">
-                {CONTACT_INFO.hotline.replace(/(\d{4})(\d{3})(\d{3})/, '$1.$2.$3')}
+              <p className="text-[9px] text-fuji-accent uppercase font-black tracking-widest leading-none mb-1">
+                Hotline Tư vấn
+              </p>
+              <a
+                href={`tel:${CONTACT_INFO.hotline}`}
+                className="text-fuji-blue font-black text-xl tracking-tight leading-none hover:opacity-70 transition-all"
+              >
+                {CONTACT_INFO.hotline.replace(
+                  /(\d{4})(\d{3})(\d{3})/,
+                  "$1.$2.$3",
+                )}
               </a>
             </div>
-            <a 
-              href="#contact" 
+            <a
+              href="#contact"
               className="px-6 py-3 bg-fuji-blue text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-fuji-accent transition-all shadow-lg active:scale-95"
             >
               Tư vấn ngay
@@ -102,41 +136,54 @@ export default function Navbar() {
           </button>
         </div>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 right-0 bg-white shadow-2xl md:hidden border-t"
-          >
-            <div className="flex flex-col p-6 gap-4">
-              {NAVIGATION.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className="text-lg font-medium text-slate-800 hover:text-fuji-blue flex items-center justify-between"
-                >
-                  {item.name}
-                  <div className="w-1.5 h-1.5 bg-fuji-blue rounded-full opacity-0 group-hover:opacity-100" />
-                </a>
-              ))}
-              <div className="pt-4 border-t flex flex-col gap-3">
-                <a href={`tel:${CONTACT_INFO.hotline}`} className="flex items-center gap-3 text-fuji-blue font-bold">
-                  <Phone size={20} /> {CONTACT_INFO.hotline}
-                </a>
-                <div className="flex gap-4">
-                  <a href={CONTACT_INFO.facebook} className="p-2 border rounded-full text-blue-600"><Facebook size={20} /></a>
-                  <a href={CONTACT_INFO.zalo} className="p-2 border rounded-full text-blue-400"><MessageCircle size={20} /></a>
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-full left-0 right-0 bg-white shadow-2xl md:hidden border-t"
+            >
+              <div className="flex flex-col p-6 gap-4">
+                {NAVIGATION.map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setIsOpen(false)}
+                    className="text-lg font-medium text-slate-800 hover:text-fuji-blue flex items-center justify-between"
+                  >
+                    {item.name}
+                    <div className="w-1.5 h-1.5 bg-fuji-blue rounded-full opacity-0 group-hover:opacity-100" />
+                  </a>
+                ))}
+                <div className="pt-4 border-t flex flex-col gap-3">
+                  <a
+                    href={`tel:${CONTACT_INFO.hotline}`}
+                    className="flex items-center gap-3 text-fuji-blue font-bold"
+                  >
+                    <Phone size={20} /> {CONTACT_INFO.hotline}
+                  </a>
+                  <div className="flex gap-4">
+                    <a
+                      href={CONTACT_INFO.facebook}
+                      className="p-2 border rounded-full text-blue-600"
+                    >
+                      <Facebook size={20} />
+                    </a>
+                    <a
+                      href={CONTACT_INFO.zalo}
+                      className="p-2 border rounded-full text-blue-400"
+                    >
+                      <MessageCircle size={20} />
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </nav>
-  </header>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
+    </header>
   );
 }

@@ -11,24 +11,14 @@ import Footer from '../components/Footer';
 import FloatingActions from '../components/FloatingActions';
 import { supabase } from '../lib/supabase';
 
-interface HeroData {
-  heroTitle?: string;
-  heroDesc?: string;
-  heroImage?: string;
-}
-
 export default function Home() {
   const [aboutImage, setAboutImage] = React.useState("https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1000");
-  const [heroData, setHeroData] = React.useState<HeroData>({});
 
   React.useEffect(() => {
     const loadData = async () => {
       const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
       if (data?.content_dict?.web_content?.aboutImage) {
         setAboutImage(data.content_dict.web_content.aboutImage);
-      }
-      if (data?.content_dict?.web_content) {
-        setHeroData(data.content_dict.web_content);
       }
     };
     loadData();
@@ -37,8 +27,7 @@ export default function Home() {
   return (
     <main className="min-h-screen">
       <Navbar />
-      {/* @ts-ignore */}
-      <Hero title={heroData.heroTitle} desc={heroData.heroDesc} bg={heroData.heroImage} />
+      <Hero />
       <Products />
       {/* About Section */}
       <section id="about" className="py-24 bg-white relative overflow-hidden">
@@ -65,8 +54,8 @@ export default function Home() {
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             >
-              <span className="text-sm font-bold uppercase tracking-wider text-fuji-accent mb-6 block">Về chúng tôi</span>
-              <h2 className="text-5xl md:text-7xl font-black text-fuji-blue tracking-tighter leading-tight mb-10">
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuji-accent mb-6 block">Về chúng tôi</span>
+              <h2 className="text-5xl md:text-7xl font-black text-fuji-blue tracking-tighter leading-[0.9] mb-10">
                 THIẾT LẬP <br/><span className="text-slate-300">TIÊU CHUẨN SỐNG</span>
               </h2>
               <p className="text-slate-600 text-xl font-medium leading-relaxed mb-8">
@@ -94,7 +83,7 @@ export default function Home() {
               className="bg-fuji-line p-12 rounded-[40px] group hover:bg-fuji-blue transition-colors duration-500 shadow-sm hover:shadow-2xl"
             >
               <div className="w-12 h-1 bg-fuji-accent mb-8 group-hover:w-24 transition-all" />
-              <h3 className="text-base font-bold uppercase tracking-wider text-fuji-accent mb-6">Sứ mệnh</h3>
+              <h3 className="text-sm font-black uppercase tracking-[0.3em] text-fuji-accent mb-6">Sứ mệnh</h3>
               <p className="text-2xl font-black text-fuji-blue group-hover:text-white leading-tight mb-6 tracking-tighter">
                 Setting the Standard for Living <br/>
                 <span className="text-fuji-accent italic">Thiết lập tiêu chuẩn sống</span>
@@ -113,7 +102,7 @@ export default function Home() {
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-fuji-accent/10 rounded-bl-full" />
               <div className="w-12 h-1 bg-fuji-accent mb-8" />
-              <h3 className="text-base font-bold uppercase tracking-wider text-fuji-accent mb-6">Tầm nhìn</h3>
+              <h3 className="text-sm font-black uppercase tracking-[0.3em] text-fuji-accent mb-6">Tầm nhìn</h3>
               <p className="text-3xl font-black text-white leading-tight mb-8 tracking-tighter">
                 Định hình tiêu chuẩn sống <br/>
                 <span className="text-fuji-accent italic">hiện đại tại Việt Nam</span>

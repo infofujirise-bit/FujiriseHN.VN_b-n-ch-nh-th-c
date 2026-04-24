@@ -246,9 +246,9 @@ export default function Products() {
                       <h3 className="text-4xl lg:text-6xl font-black text-fuji-blue tracking-tighter leading-none mb-8 uppercase">
                         {selectedProduct.title}
                       </h3>
-                      <p className="text-slate-500 text-base lg:text-lg mb-12 font-medium leading-relaxed">{selectedProduct.description}</p>
+                      <p className="text-slate-500 text-base lg:text-lg mb-8 font-medium leading-relaxed">{selectedProduct.description}</p>
 
-                      <div className="grid grid-cols-2 gap-x-12 gap-y-8 mb-16">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 mb-8">
                         <div className="space-y-2 border-l-2 border-fuji-line pl-6">
                           <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
                             <MoveUp size={14} className="text-fuji-accent" /> Tải trọng
@@ -269,15 +269,44 @@ export default function Products() {
                         </div>
                         <div className="space-y-2 border-l-2 border-fuji-line pl-6">
                           <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
-                            <Globe size={14} className="text-fuji-accent" /> Công nghệ
+                            <MoveUp size={14} className="text-fuji-accent" /> OH
                           </p>
-                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.origin}</p>
+                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.oh}</p>
+                        </div>
+                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
+                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
+                            <Globe size={14} className="text-fuji-accent" /> Hành trình
+                          </p>
+                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.travel}</p>
+                        </div>
+                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
+                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
+                            <Zap size={14} className="text-fuji-accent" /> Điểm dừng
+                          </p>
+                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.stops}</p>
+                        </div>
+                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
+                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
+                            <Cog size={14} className="text-fuji-accent" /> Cửa mở
+                          </p>
+                          <p className="font-black text-lg lg:text-xl text-fuji-blue tracking-tight">{selectedProduct.specs?.door}</p>
+                        </div>
+                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
+                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
+                            <Globe size={14} className="text-fuji-accent" /> Cấu trúc
+                          </p>
+                          <p className="font-black text-lg lg:text-xl text-fuji-blue tracking-tight">{selectedProduct.specs?.structure}</p>
                         </div>
                       </div>
 
-                      <div className="p-10 bg-fuji-line/50 border border-fuji-line rounded-[30px] mb-12">
-                          <p className="text-[11px] font-black uppercase text-fuji-blue/50 mb-3 tracking-widest">Thiết kế tùy chọn</p>
-                          <p className="text-fuji-blue font-bold text-lg">{selectedProduct.specs?.material}</p>
+                      <div className="p-8 bg-fuji-line/50 border border-fuji-line rounded-[30px] mb-12 space-y-4">
+                          <p className="text-[11px] font-black uppercase text-fuji-blue/50 mb-4 tracking-widest">Chi tiết cấu hình Cabin</p>
+                          <div className="space-y-3">
+                            <p className="text-sm font-medium text-slate-600"><strong className="text-fuji-blue">Chất liệu:</strong> {selectedProduct.cabin?.material}</p>
+                            <p className="text-sm font-medium text-slate-600"><strong className="text-fuji-blue">Vách sau:</strong> {selectedProduct.cabin?.backWall}</p>
+                            <p className="text-sm font-medium text-slate-600"><strong className="text-fuji-blue">Sàn:</strong> {selectedProduct.cabin?.floor}</p>
+                            <p className="text-sm font-medium text-slate-600"><strong className="text-fuji-blue">Trần đèn:</strong> {selectedProduct.cabin?.ceiling}</p>
+                          </div>
                       </div>
 
                       <button 
