@@ -108,7 +108,7 @@ export default function Admin() {
   const [activeTab, setActiveTab] = React.useState<Tab>('dashboard');
   const [error, setError] = React.useState('');
   const [resetSent, setResetSent] = React.useState(false);
-  const [sysLogo, setSysLogo] = React.useState('/logo1.svg');
+  const [sysLogo, setSysLogo] = React.useState('/logo.svg');
 
   React.useEffect(() => {
     const isMock = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -282,7 +282,7 @@ export default function Admin() {
         <div className="relative">
           <div className="w-16 h-16 border-4 border-slate-200 border-t-fuji-blue rounded-full animate-spin" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <img src="/logo1.svg" alt="Loading" className="w-10 h-10 object-contain animate-pulse" />
+            <img src="/logo.svg" alt="Loading" className="w-10 h-10 object-contain animate-pulse" />
           </div>
         </div>
       </div>
@@ -301,7 +301,7 @@ export default function Admin() {
           className="bg-white/10 backdrop-blur-3xl border border-white/20 w-full max-w-sm rounded-[40px] p-10 shadow-2xl relative z-10"
         >
           <div className="text-center mb-10">
-            <img src={sysLogo} onError={(e) => { e.currentTarget.src = '/logo1.svg' }} alt="Fujirise Logo" className="h-16 md:h-20 w-auto object-contain mx-auto mb-6 rounded-2xl bg-white p-3 shadow-2xl hover:scale-110 transition-transform duration-500" />
+            <img src={sysLogo} onError={(e) => { e.currentTarget.src = '/logo.svg' }} alt="Fujirise Logo" className="h-16 md:h-20 w-auto object-contain mx-auto mb-6 rounded-2xl bg-white p-3 shadow-2xl hover:scale-110 transition-transform duration-500" />
             <p className="text-white/70 text-[10px] uppercase font-black tracking-[0.3em] mt-4">Hệ quản trị an toàn</p>
           </div>
 
@@ -360,7 +360,7 @@ export default function Admin() {
     <div className="h-screen w-full bg-slate-50 flex overflow-hidden">
       <aside className="w-72 bg-fuji-blue text-white flex flex-col h-full shrink-0 z-40 relative shadow-2xl">
         <div className="p-8 pb-12 flex items-center justify-center gap-3 shrink-0">
-          <img src={sysLogo} onError={(e) => { e.currentTarget.src = '/logo1.svg' }} alt="Logo" className="h-10 md:h-12 w-auto object-contain bg-white rounded-xl p-2 shadow-xl hover:scale-105 transition-transform cursor-pointer" />
+          <img src={sysLogo} onError={(e) => { e.currentTarget.src = '/logo.svg' }} alt="Logo" className="h-10 md:h-12 w-auto object-contain bg-white rounded-xl p-2 shadow-xl hover:scale-105 transition-transform cursor-pointer" />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-4 space-y-1 pb-6">
@@ -1336,7 +1336,7 @@ function SettingsManager() {
 
 function WebContentManager() {
   const [content, setContent] = React.useState<WebContent>({
-    logoImage: "/logo1.svg",
+    logoImage: "/logo.svg",
     heroTitle: "THIẾT LẬP TIÊU CHUẨN SỐNG",
     heroDesc: "Fujirise không chỉ kiến tạo giải pháp di động, chúng tôi định hình phong cách sống hiện đại và an tâm bậc nhất cho mọi gia đình Việt.",
     heroImage: "",
@@ -1419,7 +1419,7 @@ function WebContentManager() {
              <div className="space-y-2 col-span-2 md:col-span-1">
                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">Logo Website</label>
                <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, 'logoImage')} className="w-full px-4 py-3 bg-slate-50 rounded-2xl text-xs font-bold text-slate-500 cursor-pointer" />
-               {content.logoImage && <img src={content.logoImage} onError={(e) => { e.currentTarget.src = '/logo1.svg' }} alt="Logo" className="h-16 w-auto object-contain mt-2 p-2 bg-slate-100 rounded-xl" />}
+               {content.logoImage && <img src={content.logoImage} onError={(e) => { e.currentTarget.src = '/logo.svg' }} alt="Logo" className="h-16 w-auto object-contain mt-2 p-2 bg-slate-100 rounded-xl" />}
              </div>
              <div className="space-y-2">
                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">Ảnh nền Trang chủ (Hero/Menu)</label>

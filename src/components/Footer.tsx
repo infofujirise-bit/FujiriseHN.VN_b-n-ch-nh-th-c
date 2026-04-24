@@ -4,8 +4,8 @@ import { CONTACT_INFO, NAVIGATION } from '../constants';
 import { supabase } from '../lib/supabase';
 
 export default function Footer() {
-  const [logo, setLogo] = React.useState('/logo1.svg');
-  
+  const [logo, setLogo] = React.useState('/logo.svg');
+
 
   React.useEffect(() => {
     const fetchLogo = async () => {
@@ -31,7 +31,7 @@ export default function Footer() {
               <img 
                 src={logo} 
                 alt="Fujirise Logo" 
-                onError={(e) => { e.currentTarget.src = '/logo1.svg' }}
+                onError={(e) => { e.currentTarget.src = '/logo.svg' }}
                 className="h-16 md:h-24 w-auto object-contain hover:scale-105 transition-transform duration-500 shadow-xl bg-white p-2.5 rounded-2xl"
               />
             </a>

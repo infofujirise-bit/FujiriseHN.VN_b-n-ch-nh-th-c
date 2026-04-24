@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
-  const [logo, setLogo] = React.useState('/logo1.svg');
+  const [logo, setLogo] = React.useState('/logo.svg');
 
   React.useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -58,7 +58,7 @@ export default function Navbar() {
             <img 
               src={logo} 
               alt="Fujirise Logo" 
-              onError={(e) => { e.currentTarget.src = '/logo1.svg' }}
+              onError={(e) => { e.currentTarget.src = '/logo.svg' }}
               className="h-12 md:h-16 w-auto object-contain hover:scale-105 transition-transform duration-500 drop-shadow-md"
             />
           </a>
