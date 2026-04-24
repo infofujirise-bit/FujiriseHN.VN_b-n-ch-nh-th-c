@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 
 export default function Footer() {
   const [logo, setLogo] = React.useState('/logo1.svg');
+  
 
   React.useEffect(() => {
     const fetchLogo = async () => {
