@@ -47,9 +47,39 @@ import {
 import { cn } from '../lib/utils';
 import { PRODUCTS } from '../constants';
 import { supabase, Lead, Product } from '../lib/supabase';
-import { User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { sendToTelegram } from '../lib/telegram';
 import { analyzeMarketingData } from '../services/geminiService';
+
+interface Job {
+  id: number;
+  title: string;
+  location: string;
+  type: string;
+  description: string;
+}
+
+interface ConfiguratorOption {
+  id: string;
+  name: string;
+  subtitle: string;
+  primary: string;
+  bg: string;
+  description: string;
+}
+
+interface WebContent {
+  logoImage?: string;
+  heroTitle?: string;
+  heroDesc?: string;
+  heroImage?: string;
+  aboutImage?: string;
+  hotline?: string;
+  email?: string;
+  zalo?: string;
+  facebook?: string;
+  address?: string;
+}
 
 const CHART_DATA = [
   { name: 'Th2', leads: 400 },
@@ -114,7 +144,7 @@ export default function Admin() {
 
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: Session | null) => {
       if (session) {
         await checkAdmin(session.user);
       } else {
@@ -186,7 +216,7 @@ export default function Admin() {
         user_metadata: { full_name: data.role === 'admin' ? 'Administrator' : data.email },
         id: data.id
       };
-      setUser(adminUser as any);
+      setUser(adminUser as unknown as User);
       setIsAdminUser(true);
       // Lưu lại phiên đăng nhập để tránh bị thoát khi load lại trang
       localStorage.setItem('fuji_admin_session', JSON.stringify(adminUser));
@@ -442,7 +472,7 @@ export default function Admin() {
   );
 }
 
-function NavBtn({ icon, label, active, onClick, disabled }: any) {
+function NavBtn({ icon, label, active, onClick, disabled }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void; disabled?: boolean }) {
   return (
     <button
       onClick={onClick}
@@ -553,9 +583,9 @@ function LeadManager({ type }: { type: 'consultation' | 'recruitment' }) {
       const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
       if (data) {
         if (type === 'recruitment') {
-          setLeads(data.filter(l => l.message?.startsWith('Ứng tuyển:')));
+          setLeads(data.filter((l: Lead) => l.message?.startsWith('Ứng tuyển:')));
         } else {
-          setLeads(data.filter(l => !l.message?.startsWith('Ứng tuyển:')));
+          setLeads(data.filter((l: Lead) => !l.message?.startsWith('Ứng tuyển:')));
         }
       }
       setLoadingLeads(false);
@@ -565,7 +595,7 @@ function LeadManager({ type }: { type: 'consultation' | 'recruitment' }) {
 
   const updateStatus = async (id: string, status: Lead['status']) => {
     const { error } = await supabase.from('leads').update({ status }).eq('id', id);
-    if (!error) setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
+    if (!error) setLeads(prev => prev.map((l: Lead) => l.id === id ? { ...l, status } : l));
   };
 
   return (
@@ -614,7 +644,7 @@ function LeadManager({ type }: { type: 'consultation' | 'recruitment' }) {
                 <td className="p-8">
                    <select 
                      value={lead.status}
-                     onChange={(e) => updateStatus(lead.id!, e.target.value as any)}
+                     onChange={(e) => updateStatus(lead.id!, e.target.value as Lead['status'])}
                      className={cn(
                        "text-[9px] font-black uppercase tracking-widest border-none px-3 py-2 rounded-lg outline-none cursor-pointer",
                        lead.status === 'new' ? "bg-blue-100 text-blue-600" :
@@ -650,7 +680,7 @@ function LeadManager({ type }: { type: 'consultation' | 'recruitment' }) {
 }
 
 function JobManager() {
-  const [jobs, setJobs] = React.useState<any[]>([]);
+  const [jobs, setJobs] = React.useState<Job[]>([]);
   const [formConfig, setFormConfig] = React.useState({ 
     showExperience: true, 
     requireExperience: false,
@@ -687,9 +717,9 @@ function JobManager() {
     alert('Đã lưu cấu hình tuyển dụng!');
   };
 
-  const addJob = () => setJobs([...jobs, { id: Date.now(), title: 'Vị trí mới', location: 'Hà Nội', type: 'Toàn thời gian', description: 'Mô tả công việc...' }]);
-  const updateJob = (id: number, field: string, value: any) => setJobs(jobs.map(j => j.id === id ? { ...j, [field]: value } : j));
-  const removeJob = (id: number) => setJobs(jobs.filter(j => j.id !== id));
+  const addJob = () => setJobs([...jobs, { id: Date.now(), title: 'Vị trí mới', location: 'Hà Nội', type: 'Toàn thời gian', description: 'Mô tả công việc...' } as Job]);
+  const updateJob = (id: number, field: keyof Job, value: string) => setJobs(jobs.map((j: Job) => j.id === id ? { ...j, [field]: value } : j));
+  const removeJob = (id: number) => setJobs(jobs.filter((j: Job) => j.id !== id));
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -707,11 +737,11 @@ function JobManager() {
              <div key={job.id} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 relative group">
                <button onClick={() => removeJob(job.id)} className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
                <div className="grid md:grid-cols-3 gap-4 mb-4">
-                 <Input label="Tên vị trí" value={job.title} onChange={(e: any) => updateJob(job.id, 'title', e.target.value)} />
-                 <Input label="Địa điểm" value={job.location} onChange={(e: any) => updateJob(job.id, 'location', e.target.value)} />
-                 <Input label="Hình thức" value={job.type} onChange={(e: any) => updateJob(job.id, 'type', e.target.value)} />
+                 <Input label="Tên vị trí" value={job.title} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateJob(job.id, 'title', e.target.value)} />
+                 <Input label="Địa điểm" value={job.location} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateJob(job.id, 'location', e.target.value)} />
+                 <Input label="Hình thức" value={job.type} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateJob(job.id, 'type', e.target.value)} />
                </div>
-               <Textarea label="Mô tả công việc" value={job.description} onChange={(e: any) => updateJob(job.id, 'description', e.target.value)} />
+               <Textarea label="Mô tả công việc" value={job.description} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateJob(job.id, 'description', e.target.value)} />
              </div>
            ))}
            {jobs.length === 0 && <p className="text-center text-slate-400 py-10 font-bold italic">Chưa có vị trí tuyển dụng nào. Hãy thêm mới!</p>}
@@ -720,7 +750,7 @@ function JobManager() {
       <div className="bg-white rounded-[40px] p-12 shadow-sm border border-slate-100">
         <h3 className="text-xl font-black text-fuji-blue mb-8 uppercase tracking-tight flex items-center gap-3"><Settings size={20} className="text-fuji-accent" /> Cấu hình Form Ứng Tuyển</h3>
         <div className="grid md:grid-cols-2 gap-8">
-          <Input label="Tiêu đề Form" value={formConfig.formTitle} onChange={(e: any) => setFormConfig({...formConfig, formTitle: e.target.value})} />
+          <Input label="Tiêu đề Form" value={formConfig.formTitle} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormConfig({...formConfig, formTitle: e.target.value})} />
           <div className="space-y-4">
             <div className="flex items-center gap-4 px-6 py-4 bg-slate-50 rounded-2xl">
               <input type="checkbox" id="showEmail" checked={formConfig.showEmail} onChange={(e) => setFormConfig({...formConfig, showEmail: e.target.checked})} className="w-5 h-5 accent-fuji-accent cursor-pointer" />
@@ -756,7 +786,7 @@ function ProductManager() {
       if (data?.content_dict?.products && data.content_dict.products.length > 0) {
         setProducts(data.content_dict.products);
       } else {
-        setProducts(PRODUCTS.map(p => ({
+        setProducts(PRODUCTS.map((p: any) => ({
           ...p,
           model: 'FUH220S',
           category: 'Thang máy Homelife',
@@ -768,7 +798,7 @@ function ProductManager() {
             vách_trước: 'Thép không gỉ chống bám vân tay...',
             sàn: 'Đá Marble cao cấp...'
           }
-        })) as any);
+        })) as Product[]);
       }
     };
     fetchProducts();
@@ -840,7 +870,7 @@ function ProductManager() {
             technology: 'Cáp kéo', 
             specs: { load: '', speed: '', pit: '', oh: '', travel: '', stops: '', origin: '', material: '' }, 
             cabin: { trần: '', vách_bên: '', vách_sau: '', vách_trước: '', sàn: '' } 
-          } as any)}
+          } as Product)}
           className="px-6 py-3 bg-fuji-accent text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 group hover:bg-fuji-blue transition-all"
         >
           <Plus size={16} /> Thêm sản phẩm mới
@@ -866,7 +896,7 @@ function ProductManager() {
                    <button 
                      onClick={async () => {
                         if(confirm('Bạn có chắc muốn xóa sản phẩm này?')) {
-                          const newProducts = products.filter(p => p.id !== product.id);
+                          const newProducts = products.filter((p: Product) => p.id !== product.id);
                           setProducts(newProducts);
                           try {
                             const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
@@ -917,29 +947,29 @@ function ProductManager() {
                   const formData = new FormData(e.target as HTMLFormElement);
                   const updatedProduct = {
                     ...isEditing,
-                    title: formData.get('title') || isEditing?.title,
-                    description: formData.get('description') || isEditing?.description,
-                    model: formData.get('model') || isEditing?.model,
-                    category: formData.get('category') || isEditing?.category,
-                    technology: formData.get('technology') || isEditing?.technology,
+                    title: (formData.get('title') as string) || isEditing?.title || '',
+                    description: (formData.get('description') as string) || isEditing?.description,
+                    model: (formData.get('model') as string) || isEditing?.model,
+                    category: (formData.get('category') as string) || isEditing?.category,
+                    technology: (formData.get('technology') as string) || isEditing?.technology,
                     specs: {
                       ...(isEditing?.specs || {}),
-                      load: formData.get('load') || isEditing?.specs?.load,
-                      speed: formData.get('speed') || isEditing?.specs?.speed,
-                      pit: formData.get('pit') || isEditing?.specs?.pit,
-                      oh: formData.get('oh') || isEditing?.specs?.oh,
-                      travel: formData.get('travel') || isEditing?.specs?.travel,
-                      stops: formData.get('stops') || isEditing?.specs?.stops,
-                      origin: formData.get('origin') || isEditing?.specs?.origin,
-                      material: formData.get('material') || isEditing?.specs?.material,
+                      load: (formData.get('load') as string) || isEditing?.specs?.load,
+                      speed: (formData.get('speed') as string) || isEditing?.specs?.speed,
+                      pit: (formData.get('pit') as string) || isEditing?.specs?.pit,
+                      oh: (formData.get('oh') as string) || isEditing?.specs?.oh,
+                      travel: (formData.get('travel') as string) || isEditing?.specs?.travel,
+                      stops: (formData.get('stops') as string) || isEditing?.specs?.stops,
+                      origin: (formData.get('origin') as string) || isEditing?.specs?.origin,
+                      material: (formData.get('material') as string) || isEditing?.specs?.material,
                     },
                     cabin: {
                       ...(isEditing?.cabin || {}),
-                      trần: formData.get('trần') || isEditing?.cabin?.trần,
-                      vách_bên: formData.get('vách_bên') || isEditing?.cabin?.vách_bên,
-                      vách_sau: formData.get('vách_sau') || isEditing?.cabin?.vách_sau,
-                      vách_trước: formData.get('vách_trước') || isEditing?.cabin?.vách_trước,
-                      sàn: formData.get('sàn') || isEditing?.cabin?.sàn,
+                      trần: (formData.get('trần') as string) || isEditing?.cabin?.trần,
+                      vách_bên: (formData.get('vách_bên') as string) || isEditing?.cabin?.vách_bên,
+                      vách_sau: (formData.get('vách_sau') as string) || isEditing?.cabin?.vách_sau,
+                      vách_trước: (formData.get('vách_trước') as string) || isEditing?.cabin?.vách_trước,
+                      sàn: (formData.get('sàn') as string) || isEditing?.cabin?.sàn,
                     }
                   };
 
@@ -948,7 +978,7 @@ function ProductManager() {
                     updatedProduct.id = Date.now();
                     newProducts = [...products, updatedProduct];
                   } else {
-                    newProducts = products.map(p => p.id === updatedProduct.id ? updatedProduct : p);
+                  newProducts = products.map((p: Product) => p.id === updatedProduct.id ? updatedProduct : p);
                   }
 
                   const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
@@ -1037,8 +1067,8 @@ function ProductManager() {
 }
 
 function ConfiguratorManager() {
-  const [configs, setConfigs] = React.useState<any[]>([]);
-  const [isEditing, setIsEditing] = React.useState<any | null>(null);
+  const [configs, setConfigs] = React.useState<ConfiguratorOption[]>([]);
+  const [isEditing, setIsEditing] = React.useState<ConfiguratorOption | null>(null);
 
   React.useEffect(() => {
     const loadConfigs = async () => {
@@ -1103,7 +1133,7 @@ function ConfiguratorManager() {
                <button 
                  onClick={async () => {
                     if(confirm('Xóa tùy chọn thiết kế này?')) {
-                      const newConfigs = configs.filter(c => c.id !== config.id);
+                      const newConfigs = configs.filter((c: ConfiguratorOption) => c.id !== config.id);
                       setConfigs(newConfigs);
                       const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
                       const currentDict = data?.content_dict || {};
@@ -1152,9 +1182,9 @@ function ConfiguratorManager() {
                   primary: formData.get('primary') as string,
                 };
 
-                const exists = configs.find(c => c.id === updatedConfig.id);
+                const exists = configs.find((c: ConfiguratorOption) => c.id === updatedConfig.id);
                 const newConfigs = exists 
-                  ? configs.map(c => c.id === updatedConfig.id ? updatedConfig : c)
+                  ? configs.map((c: ConfiguratorOption) => c.id === updatedConfig.id ? updatedConfig : c)
                   : [...configs, updatedConfig];
 
                 const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
@@ -1239,9 +1269,9 @@ function SettingsManager() {
           <BrainCircuit size={20} className="text-fuji-accent" /> Cấu hình API Hệ thống
         </h3>
         <div className="grid md:grid-cols-2 gap-8">
-           <Input label="Supabase Project URL" value={supaUrl} onChange={(e: any) => setSupaUrl(e.target.value)} />
-           <Input label="Supabase Anon Key" type="password" value={supaKey} onChange={(e: any) => setSupaKey(e.target.value)} />
-           <Input label="Gemini AI API Key" type="password" value={aiKey} onChange={(e: any) => setAiKey(e.target.value)} />
+           <Input label="Supabase Project URL" value={supaUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSupaUrl(e.target.value)} />
+           <Input label="Supabase Anon Key" type="password" value={supaKey} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSupaKey(e.target.value)} />
+           <Input label="Gemini AI API Key" type="password" value={aiKey} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAiKey(e.target.value)} />
         </div>
         <div className="mt-6 flex justify-end">
            <button className="px-8 py-4 bg-fuji-blue text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-fuji-accent transition-all">
@@ -1305,7 +1335,7 @@ function SettingsManager() {
 }
 
 function WebContentManager() {
-  const [content, setContent] = React.useState<any>({
+  const [content, setContent] = React.useState<WebContent>({
     logoImage: "/logo1.svg",
     heroTitle: "THIẾT LẬP TIÊU CHUẨN SỐNG",
     heroDesc: "Fujirise không chỉ kiến tạo giải pháp di động, chúng tôi định hình phong cách sống hiện đại và an tâm bậc nhất cho mọi gia đình Việt.",
@@ -1322,7 +1352,7 @@ function WebContentManager() {
     const loadContent = async () => {
       const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
       if (data?.content_dict?.web_content) {
-        setContent((prev: any) => ({ ...prev, ...data.content_dict.web_content }));
+        setContent((prev) => ({ ...prev, ...data.content_dict.web_content }));
       }
     };
     loadContent();
@@ -1333,13 +1363,13 @@ function WebContentManager() {
     const formData = new FormData(e.target as HTMLFormElement);
     const newContent = {
       ...content,
-      heroTitle: formData.get('heroTitle'),
-      heroDesc: formData.get('heroDesc'),
-      hotline: formData.get('hotline'),
-      email: formData.get('email'),
-      zalo: formData.get('zalo'),
-      facebook: formData.get('facebook'),
-      address: formData.get('address'),
+      heroTitle: formData.get('heroTitle') as string,
+      heroDesc: formData.get('heroDesc') as string,
+      hotline: formData.get('hotline') as string,
+      email: formData.get('email') as string,
+      zalo: formData.get('zalo') as string,
+      facebook: formData.get('facebook') as string,
+      address: formData.get('address') as string,
     };
 
     try {
@@ -1355,13 +1385,13 @@ function WebContentManager() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: keyof WebContent) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
       const isMock = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
       if (isMock) {
-        setContent((prev: any) => ({ ...prev, [field]: URL.createObjectURL(file) }));
+        setContent((prev) => ({ ...prev, [field]: URL.createObjectURL(file) }));
         return;
       }
       const fileExt = file.name.split('.').pop();
@@ -1369,7 +1399,7 @@ function WebContentManager() {
       const { error } = await supabase.storage.from('images').upload(fileName, file);
       if (error) throw error;
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
-      setContent((prev: any) => ({ ...prev, [field]: publicUrl }));
+      setContent((prev) => ({ ...prev, [field]: publicUrl }));
     } catch (error) {
       console.error(error);
       alert('Lỗi upload ảnh!');
@@ -1427,7 +1457,7 @@ function WebContentManager() {
   );
 }
 
-function StatCard({ icon, label, value, trend, positive }: any) {
+function StatCard({ icon, label, value, trend, positive }: { icon: React.ReactNode; label: string; value: string | number; trend: string; positive: boolean }) {
   return (
     <div className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all group">
       <div className="flex justify-between items-start mb-6">
@@ -1447,7 +1477,7 @@ function StatCard({ icon, label, value, trend, positive }: any) {
   );
 }
 
-function Input({ label, ...props }: any) {
+function Input({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
     <div className="space-y-1 cursor-text">
        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">{label}</label>
@@ -1456,7 +1486,7 @@ function Input({ label, ...props }: any) {
   );
 }
 
-function Textarea({ label, ...props }: any) {
+function Textarea({ label, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
   return (
     <div className="space-y-1">
        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">{label}</label>
@@ -1465,7 +1495,7 @@ function Textarea({ label, ...props }: any) {
   );
 }
 
-const MapPin = ({ size, className }: any) => (
+const MapPin = ({ size, className }: { size: number; className?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
     <circle cx="12" cy="10" r="3"/>

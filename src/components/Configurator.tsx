@@ -38,9 +38,9 @@ export default function Configurator() {
   const [showForm, setShowForm] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset } = useForm<{ name: string; phone: string }>();
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: { name: string; phone: string }) => {
     setIsSubmitting(true);
     try {
       const message = `Yêu cầu Catalogue Nội thất: ${active.name}`;

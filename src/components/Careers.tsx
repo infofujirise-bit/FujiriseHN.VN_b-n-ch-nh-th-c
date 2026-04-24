@@ -15,11 +15,20 @@ type RecruitmentFormData = {
   experience: string;
 };
 
+interface Job {
+  id: number;
+  id_code?: string;
+  title: string;
+  location: string;
+  type: string;
+  description: string;
+}
+
 export default function Careers() {
   const [selectedJob, setSelectedJob] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
-  const [careers, setCareers] = React.useState(DEFAULT_CAREERS);
+  const [careers, setCareers] = React.useState<Job[]>(DEFAULT_CAREERS as Job[]);
   const [formConfig, setFormConfig] = React.useState({ 
     showExperience: true, 
     requireExperience: false,
@@ -125,7 +134,7 @@ ${data.email ? `<b>Email:</b> ${data.email}\n` : ''}<b>Vị trí:</b> ${data.pos
         </div>
 
         <div className="grid gap-6">
-          {careers.map((job: any, index: number) => (
+          {careers.map((job: Job, index: number) => (
             <motion.div
               key={job.id}
               initial={{ opacity: 0, x: -20 }}

@@ -64,15 +64,30 @@ export interface Product {
   title: string;
   category?: string;
   description?: string;
-  images?: any;
-  specs?: any;
+  images?: string[];
+  specs?: {
+    load?: string;
+    speed?: string;
+    pit?: string;
+    oh?: string;
+    travel?: string;
+    stops?: string;
+    origin?: string;
+    material?: string;
+  };
   material?: string;
   longDescription?: string;
   created_at?: string;
   image?: string;
   model?: string;
   technology?: string;
-  cabin?: any;
+  cabin?: {
+    trần?: string;
+    vách_bên?: string;
+    vách_sau?: string;
+    vách_trước?: string;
+    sàn?: string;
+  };
 }
 
 export interface PageView {

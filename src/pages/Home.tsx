@@ -11,9 +11,15 @@ import Footer from '../components/Footer';
 import FloatingActions from '../components/FloatingActions';
 import { supabase } from '../lib/supabase';
 
+interface HeroData {
+  heroTitle?: string;
+  heroDesc?: string;
+  heroImage?: string;
+}
+
 export default function Home() {
   const [aboutImage, setAboutImage] = React.useState("https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=80&w=1000");
-  const [heroData, setHeroData] = React.useState<any>({});
+  const [heroData, setHeroData] = React.useState<HeroData>({});
 
   React.useEffect(() => {
     const loadData = async () => {
