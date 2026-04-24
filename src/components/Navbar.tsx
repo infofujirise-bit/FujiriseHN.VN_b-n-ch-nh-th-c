@@ -3,14 +3,25 @@ import { Phone, Mail, MapPin, Facebook, MessageCircle, Menu, X } from 'lucide-re
 import { motion, AnimatePresence } from 'motion/react';
 import { CONTACT_INFO, NAVIGATION } from '../constants';
 import { cn } from '../lib/utils';
+import { supabase } from '../lib/supabase';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
+  const [logo, setLogo] = React.useState('/logo1.svg');
 
   React.useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
+
+    const fetchLogo = async () => {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      if (data?.content_dict?.web_content?.logoImage) {
+        setLogo(data.content_dict.web_content.logoImage);
+      }
+    };
+    fetchLogo();
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -45,7 +56,7 @@ export default function Navbar() {
           {/* Logo Left */}
           <a href="/" className="flex items-center group shrink-0">
             <img 
-              src="/logo1.svg" 
+              src={logo} 
               alt="Fujirise Logo" 
               onError={(e) => { e.currentTarget.src = '/logo1.svg' }}
               className="h-12 md:h-16 w-auto object-contain hover:scale-105 transition-transform duration-500 drop-shadow-md"

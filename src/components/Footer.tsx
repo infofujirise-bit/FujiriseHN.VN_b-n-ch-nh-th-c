@@ -1,8 +1,21 @@
 import React from 'react';
 import { Facebook, MessageCircle, MapPin, Phone, Mail, Instagram, Youtube } from 'lucide-react';
 import { CONTACT_INFO, NAVIGATION } from '../constants';
+import { supabase } from '../lib/supabase';
 
 export default function Footer() {
+  const [logo, setLogo] = React.useState('/logo1.svg');
+
+  React.useEffect(() => {
+    const fetchLogo = async () => {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      if (data?.content_dict?.web_content?.logoImage) {
+        setLogo(data.content_dict.web_content.logoImage);
+      }
+    };
+    fetchLogo();
+  }, []);
+
   return (
     <footer className="bg-fuji-blue text-white pt-24 pb-8 relative overflow-hidden">
       {/* Decorative background element */}
@@ -15,7 +28,7 @@ export default function Footer() {
           <div className="space-y-8">
             <a href="/" className="inline-block group">
               <img 
-                src="/logo1.svg" 
+                src={logo} 
                 alt="Fujirise Logo" 
                 onError={(e) => { e.currentTarget.src = '/logo1.svg' }}
                 className="h-16 md:h-24 w-auto object-contain hover:scale-105 transition-transform duration-500 shadow-xl bg-white p-2.5 rounded-2xl"
