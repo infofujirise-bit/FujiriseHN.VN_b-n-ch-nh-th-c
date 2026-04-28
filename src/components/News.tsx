@@ -330,7 +330,11 @@ export default function News() {
                   
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 py-6 border-y border-slate-100 mb-12">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-fuji-blue text-white rounded-full flex items-center justify-center font-black text-xl shadow-inner">F</div>
+                      <div className="w-12 h-12 bg-white text-fuji-blue border border-slate-100 rounded-full flex items-center justify-center shadow-md">
+                        <svg viewBox="14 -151 112 152" className="w-4 h-4 fill-current">
+                          <path d="M 46.078125 -125.8125 L 46.078125 -79.359375 L 123 -79.359375 L 123 -55.078125 L 46.078125 -55.078125 L 46.078125 0 L 14.609375 0 L 14.609375 -150.09375 L 125.453125 -150.09375 L 125.453125 -125.8125 Z" />
+                        </svg>
+                      </div>
                       <div>
                         <p className="font-black text-fuji-blue text-sm uppercase tracking-widest">Fujirise Editorial</p>
                         <div className="flex items-center gap-3 text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">

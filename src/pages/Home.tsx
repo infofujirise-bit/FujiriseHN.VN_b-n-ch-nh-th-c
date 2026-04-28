@@ -31,9 +31,9 @@ export default function Home() {
       <Hero />
       <Products />
       {/* About Section */}
-      <section id="about" className="py-24 bg-white relative overflow-hidden">
+      <section id="about" className="py-16 md:py-24 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-16 items-center mb-24">
+          <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center mb-16 md:mb-24">
             <motion.div 
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}

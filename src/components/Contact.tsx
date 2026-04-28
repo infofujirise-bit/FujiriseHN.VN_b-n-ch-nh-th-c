@@ -85,12 +85,12 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="py-32 bg-white relative">
+    <section id="contact" className="py-16 md:py-32 bg-white relative">
       {/* Background decoration */}
       <div className="absolute left-0 bottom-0 w-1/3 h-px bg-slate-100" />
       
       <div className="max-w-7xl mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-24 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
           {/* Info Side */}
           <div>
             <motion.span

@@ -37,7 +37,8 @@ import {
   Users2,
   Newspaper,
   ThumbsUp,
-  Quote
+  Quote,
+  Menu
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -129,6 +130,7 @@ export default function Admin() {
   const [error, setError] = React.useState('');
   const [resetSent, setResetSent] = React.useState(false);
   const [sysLogo, setSysLogo] = React.useState('/logo.svg');
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   React.useEffect(() => {
     const isMock = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -346,35 +348,42 @@ export default function Admin() {
   }
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex overflow-hidden">
-      <aside className="w-72 bg-fuji-blue text-white flex flex-col h-full shrink-0 z-40 relative shadow-2xl">
+    <div className="h-screen w-full bg-slate-50 flex overflow-hidden relative">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
+      )}
+      <aside className={cn(
+        "w-72 bg-fuji-blue text-white flex flex-col h-full shrink-0 z-50 absolute md:relative shadow-2xl transition-transform duration-300",
+        isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}>
         <div className="p-8 pb-12 flex items-center justify-center gap-3 shrink-0">
           <img src={sysLogo} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo.svg'; }} alt="Logo" className="h-10 md:h-12 w-auto object-contain bg-white rounded-xl p-2 shadow-xl hover:scale-105 transition-transform cursor-pointer" />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-4 space-y-1 pb-6">
           <p className="px-4 text-[10px] font-black uppercase text-white/30 tracking-widest mb-4">Tổng quan</p>
-          <NavBtn icon={<LayoutDashboard size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+          <NavBtn icon={<LayoutDashboard size={20} />} label="Dashboard" active={activeTab === 'dashboard'} onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }} />
           
           <div className="h-4" />
           <p className="px-4 text-[10px] font-black uppercase text-white/30 tracking-widest mb-4">Quản lý Leads</p>
-          <NavBtn icon={<FileText size={20} />} label="Leads & Tư vấn" active={activeTab === 'content'} onClick={() => setActiveTab('content')} />
-          <NavBtn icon={<Users size={20} />} label="Ứng tuyển" active={activeTab === 'users'} onClick={() => setActiveTab('users')} />
+          <NavBtn icon={<FileText size={20} />} label="Leads & Tư vấn" active={activeTab === 'content'} onClick={() => { setActiveTab('content'); setIsSidebarOpen(false); }} />
+          <NavBtn icon={<Users size={20} />} label="Ứng tuyển" active={activeTab === 'users'} onClick={() => { setActiveTab('users'); setIsSidebarOpen(false); }} />
           
           <div className="h-4" />
           <p className="px-4 text-[10px] font-black uppercase text-white/30 tracking-widest mb-4">Danh mục</p>
-          <NavBtn icon={<ImageIcon size={20} />} label="Sản phẩm" active={activeTab === 'images'} onClick={() => setActiveTab('images')} />
-          <NavBtn icon={<Palette size={20} />} label="Mô phỏng" active={activeTab === 'configurator'} onClick={() => setActiveTab('configurator')} />
-          <NavBtn icon={<HelpCircle size={20} />} label="Hỏi đáp (FAQ)" active={activeTab === 'faq'} onClick={() => setActiveTab('faq')} />
-          <NavBtn icon={<Newspaper size={20} />} label="Tin tức & Sự kiện" active={activeTab === 'news'} onClick={() => setActiveTab('news')} />
-          <NavBtn icon={<ShieldCheck size={20} />} label="Chính sách" active={activeTab === 'warranty'} onClick={() => setActiveTab('warranty')} />
+          <NavBtn icon={<ImageIcon size={20} />} label="Sản phẩm" active={activeTab === 'images'} onClick={() => { setActiveTab('images'); setIsSidebarOpen(false); }} />
+          <NavBtn icon={<Palette size={20} />} label="Mô phỏng" active={activeTab === 'configurator'} onClick={() => { setActiveTab('configurator'); setIsSidebarOpen(false); }} />
+          <NavBtn icon={<HelpCircle size={20} />} label="Hỏi đáp (FAQ)" active={activeTab === 'faq'} onClick={() => { setActiveTab('faq'); setIsSidebarOpen(false); }} />
+          <NavBtn icon={<Newspaper size={20} />} label="Tin tức & Sự kiện" active={activeTab === 'news'} onClick={() => { setActiveTab('news'); setIsSidebarOpen(false); }} />
+          <NavBtn icon={<ShieldCheck size={20} />} label="Chính sách" active={activeTab === 'warranty'} onClick={() => { setActiveTab('warranty'); setIsSidebarOpen(false); }} />
           
           <div className="h-4" />
           <p className="px-4 text-[10px] font-black uppercase text-white/30 tracking-widest mb-4">Cấu hình</p>
-          <NavBtn icon={<Briefcase size={20} />} label="Đăng tuyển" active={activeTab === 'jobs'} onClick={() => setActiveTab('jobs')} />
-          <NavBtn icon={<Type size={20} />} label="Nội dung Web" active={activeTab === 'web_content'} onClick={() => setActiveTab('web_content')} />
-          <NavBtn icon={<Settings size={20} />} label="Cài đặt" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
-          {user?.role === 'admin' && <NavBtn icon={<Users2 size={20} />} label="Tài khoản" active={activeTab === 'accounts'} onClick={() => setActiveTab('accounts')} />}
+          <NavBtn icon={<Briefcase size={20} />} label="Đăng tuyển" active={activeTab === 'jobs'} onClick={() => { setActiveTab('jobs'); setIsSidebarOpen(false); }} />
+          <NavBtn icon={<Type size={20} />} label="Nội dung Web" active={activeTab === 'web_content'} onClick={() => { setActiveTab('web_content'); setIsSidebarOpen(false); }} />
+          <NavBtn icon={<Settings size={20} />} label="Cài đặt" active={activeTab === 'settings'} onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }} />
+          {user?.role === 'admin' && <NavBtn icon={<Users2 size={20} />} label="Tài khoản" active={activeTab === 'accounts'} onClick={() => { setActiveTab('accounts'); setIsSidebarOpen(false); }} />}
         </nav>
 
         <div className="p-6 shrink-0 border-t border-white/5">
@@ -403,9 +412,12 @@ export default function Admin() {
       </aside>
 
       <main className="flex-1 flex flex-col h-full relative overflow-hidden">
-        <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-10 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-black text-fuji-blue tracking-tighter uppercase">
+        <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-10 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.02)] gap-4">
+          <div className="flex items-center gap-3 md:gap-4">
+            <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-slate-400 hover:text-fuji-blue transition-colors">
+              <Menu size={20} />
+            </button>
+            <h2 className="text-sm md:text-xl font-black text-fuji-blue tracking-tighter uppercase truncate max-w-[140px] md:max-w-none">
               {activeTab === 'dashboard' ? 'Bảng Điều Khiển' : 
                activeTab === 'content' ? 'Quản lý Leads' :
                activeTab === 'jobs' ? 'Quản lý Tuyển dụng' :
@@ -418,19 +430,19 @@ export default function Admin() {
                activeTab === 'warranty' ? 'Chính sách' : 
                activeTab === 'web_content' ? 'Nội dung Web' : 'Cài đặt'}
             </h2>
-            <div className="bg-slate-100 px-3 py-1 rounded-full text-[10px] font-black text-slate-400">Enterprise v3.0</div>
+            <div className="hidden md:block bg-slate-100 px-3 py-1 rounded-full text-[10px] font-black text-slate-400">Enterprise v3.0</div>
           </div>
 
-          <div className="flex items-center gap-6">
-             <div className="relative group">
+          <div className="flex items-center gap-3 md:gap-6">
+             <div className="relative group hidden sm:block">
                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                <input 
                  type="text" 
                  placeholder="Tìm kiếm..." 
-                 className="bg-slate-50 border-none rounded-xl h-10 w-64 pl-10 text-xs font-medium focus:ring-2 focus:ring-fuji-blue transition-all"
+                 className="bg-slate-50 border-none rounded-xl h-10 w-48 lg:w-64 pl-10 text-xs font-medium focus:ring-2 focus:ring-fuji-blue transition-all"
                />
              </div>
-             <div className="w-px h-6 bg-slate-100" />
+             <div className="hidden sm:block w-px h-6 bg-slate-100" />
              <button className="relative w-10 h-10 flex items-center justify-center text-slate-400 hover:text-fuji-blue transition-colors">
                 <Bell size={20} />
                 <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
@@ -441,7 +453,7 @@ export default function Admin() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-10">
+        <div className="flex-1 overflow-y-auto p-4 md:p-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -578,7 +590,7 @@ function Dashboard() {
         </button>
       </div>
 
-      <div className="grid md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         <StatCard icon={<MessageSquare className="text-blue-500" />} label="Tổng yêu cầu" value={stats.totalLeads} trend="Thực tế" positive={true} />
         <StatCard icon={<AlertCircle className="text-orange-500" />} label="Chờ xử lý" value={stats.newLeads} trend={stats.newLeads > 0 ? "Cần xử lý" : "An toàn"} positive={stats.newLeads === 0} />
         <StatCard icon={<Activity className="text-green-500" />} label="Tỉ lệ Chuyển đổi" value={stats.conversion} trend="Thành công" positive={true} />
