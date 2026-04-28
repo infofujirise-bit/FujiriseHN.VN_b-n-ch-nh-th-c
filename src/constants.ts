@@ -99,59 +99,63 @@ export const PRODUCTS = [
 
 export const FAQS = [
   {
-    q: "Thang máy gia đình cần diện tích tối thiểu bao nhiêu?",
-    a: "Với công nghệ hiện đại, Fujirise có thể lắp đặt thang máy chỉ với diện tích thông thủy từ 1m x 1m (phù hợp cho thang 250kg)."
+    q: "Chi phí lắp thang máy gia đình khoảng bao nhiêu?",
+    a: "Tùy vào dòng thang, số tầng và vật liệu, chi phí thường từ 300 triệu đến hơn 1 tỷ đồng. Chúng tôi sẽ khảo sát thực tế để tư vấn phương án phù hợp nhất với ngân sách."
   },
   {
-    q: "Hố Pit là gì? Có cần phải đào sâu không?",
-    a: "Hố Pit là phần hố dưới chân thang. Với thang máy Fujirise, chúng tôi cung cấp giải pháp Pit nông chỉ từ 15cm - 30cm, không làm ảnh hưởng đến móng nhà."
+    q: "Nhà tôi có diện tích nhỏ, có lắp được không?",
+    a: "Hoàn toàn được. Hiện nay có nhiều giải pháp thang máy hố nhỏ, không cần phòng máy, phù hợp cả nhà phố diện tích hạn chế.\n•  Với thang nhỏ (2–3 người):\n👉 Có thể làm hố thang từ 1000 x 1000 mm\n•  Với thang phổ biến (4–5 người):\n👉 Nên từ 1300 x 1300 mm trở lên"
   },
   {
-    q: "Thang máy có tốn điện không?",
-    a: "Thang máy gia đình hiện nay sử dụng biến tần tiết kiệm điện. Tiêu thụ điện năng chỉ tương đương với một chiếc tủ lạnh hoặc điều hòa 1.5 HP."
+    q: "Lắp thang máy có cần xây hố thang từ đầu không?",
+    a: "Nếu là nhà xây mới, nên thiết kế từ đầu. Với nhà cải tạo, vẫn có thể lắp bằng khung thép hoặc kính, không ảnh hưởng nhiều đến kết cấu."
   },
   {
-    q: "Cần lưu ý gì khi lắp thang máy cho nhà cũ (nhà cải tạo)?",
-    a: "Nhà cải tạo thường ưu tiên thang khung thép để tiết kiệm diện tích và không cần xây cột bê tông. Fujirise chuyên cung cấp các giải pháp may đo riêng cho loại hình này."
+    q: "Thang máy gia đình có tốn điện không?",
+    a: "Mức tiêu thụ điện tương đương một thiết bị gia dụng lớn (như điều hòa), khá tiết kiệm nhờ công nghệ hiện đại."
   },
   {
-    q: "Bao lâu thì cần bảo trì thang máy một lần?",
-    a: "Để đảm bảo an toàn tuyệt đối, thang máy gia đình nên được bảo trì định kỳ 1-2 tháng/lần tùy tần suất sử dụng."
+    q: "Khi mất điện thì thang có hoạt động không?",
+    a: "Thang được trang bị hệ thống cứu hộ tự động (ARD), giúp đưa cabin về tầng gần nhất và mở cửa an toàn."
   },
   {
-    q: "Thang máy có hoạt động khi mất điện không?",
-    a: "Có. Tất cả thang máy Fujirise đều trang bị bộ cứu hộ tự động (ARD), giúp đưa thang về tầng gần nhất và mở cửa khi mất điện lưới."
+    q: "Thang máy có an toàn cho trẻ em và người lớn tuổi không?",
+    a: "Rất an toàn. Thang có đầy đủ cảm biến, chống kẹt cửa, dừng khẩn cấp… phù hợp cho mọi thành viên trong gia đình."
   },
   {
-    q: "Thang nội địa và thang nhập khẩu khác nhau thế nào?",
-    a: "Thang nhập khẩu nguyên chiếc thường có kích thước cố định, trong khi thang Fujirise là dòng thang đồng bộ linh kiện nhập khẩu được lắp ráp trong nước, cho phép tùy chỉnh linh hoạt theo kích thước thực tế của từng nhà."
+    q: "Thời gian lắp đặt thang máy là bao lâu?",
+    a: "Thông thường từ 120 ngày, tính từ ngày ký hợp đồng, báo giá thang máy."
   },
   {
-    q: "Chế độ bảo hành của Fujirise như thế nào?",
-    a: "Chúng tôi bảo hành 24 tháng cho toàn bộ linh kiện và bảo trì miễn phí trong 12 tháng đầu tiên."
+    q: "Có cần bảo trì thường xuyên không?",
+    a: "Nên bảo trì định kỳ 1–2 tháng/lần để đảm bảo thang luôn vận hành ổn định và kéo dài tuổi thọ."
   },
   {
-    q: "Lắp đặt thang máy mất bao lâu?",
-    a: "Tổng thời gian từ khi đặt hàng đến khi bàn giao vận hành thường dao động từ 45 - 60 ngày (bao gồm thời gian sản xuất và lắp đặt)."
+    q: "Thang máy có gây tiếng ồn không?",
+    a: "Các dòng thang hiện đại vận hành rất êm ái, gần như không gây ảnh hưởng đến sinh hoạt gia đình."
   },
   {
-    q: "Tiếng ồn khi vận hành có lớn không?",
-    a: "Với máy kéo không bánh răng Fuji Global, độ ồn chỉ dưới 50dB, cực kỳ êm ái và không làm ảnh hưởng đến sinh hoạt gia đình."
+    q: "Có thể thiết kế thang theo nội thất nhà không?",
+    a: "Hoàn toàn có thể. Khách hàng có thể tùy chọn vật liệu như kính, inox, gỗ… để phù hợp phong cách kiến trúc."
   },
   {
-    q: "Có bao nhiêu loại cửa thang máy?",
-    a: "Có 2 loại chính: Cửa mở tự động (2 cánh mở về 2 bên hoặc 1 bên) và cửa mở bằng tay (như cửa phòng, phù hợp cho nhà siêu nhỏ)."
+    q: "Nên chọn thang máy kính hay thang truyền thống?",
+    a: "•\tThang kính: đẹp, hiện đại, phù hợp nhà mới\n•\tThang truyền thống: chi phí tốt hơn, bền bỉ\n→ Tùy nhu cầu và ngân sách"
   },
   {
-    q: "Vật liệu nội thất có thể tùy chọn không?",
-    a: "Khách hàng hoàn toàn có thể chọn inox sọc, inox gương, mạ vàng, vân gỗ hoặc kính cường lực tùy theo phong cách nội thất."
+    q: "Chiều cao tầng trên cùng tối thiểu bao nhiêu?",
+    a: "→ Chiều cao tầng trên cùng (OH) tối thiểu Từ 2600 mm, tùy theo loại thang. Đội ngũ kỹ thuật sẽ khảo sát và tư vấn phương án phù hợp để đảm bảo an toàn và thẩm mỹ."
   },
   {
-    q: "Tải trọng thang máy bao nhiêu là phù hợp?",
-    a: "Gia đình 4-5 người thường dùng thang 320kg. Gia đình 6-8 người hoặc có nhu cầu vận chuyển đồ đạc nên dùng thang 450kg."
+    q: "Có cần xin giấy phép khi lắp thang máy không?",
+    a: "Thông thường không cần giấy phép riêng, nhưng cần tuân thủ thiết kế xây dựng và tiêu chuẩn an toàn."
   },
   {
-    q: "Cơ quan nào kiểm định an toàn thang máy?",
-    a: "Sau khi lắp đặt, thang sẽ được Trung tâm kiểm định của Bộ Lao động - Thương binh và Xã hội cấp giấy chứng nhận an toàn mới được đưa vào sử dụng."
+    q: "Lắp thang máy có làm tăng giá trị ngôi nhà không?",
+    a: "Có. Thang máy giúp tăng tiện nghi, thẩm mỹ và giá trị bất động sản đáng kể."
+  },
+  {
+    q: "Tôi nên chọn dòng thang nào phù hợp?",
+    a: "•\tNgân sách vừa: chọn dòng tiêu chuẩn\n•\tƯu tiên thẩm mỹ: chọn dòng kính\n•\tCao cấp: chọn dòng luxury\n→ Chúng tôi sẽ tư vấn chi tiết theo nhu cầu thực tế của bạn."
   }
 ];

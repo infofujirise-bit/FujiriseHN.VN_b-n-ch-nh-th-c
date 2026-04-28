@@ -2,9 +2,21 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Minus, HelpCircle } from 'lucide-react';
 import { FAQS } from '../constants';
+import { supabase } from '../lib/supabase';
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = React.useState<number | null>(0);
+  const [faqs, setFaqs] = React.useState(FAQS);
+
+  React.useEffect(() => {
+    const loadFaqs = async () => {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      if (data?.content_dict?.faqs && data.content_dict.faqs.length > 0) {
+        setFaqs(data.content_dict.faqs);
+      }
+    };
+    loadFaqs();
+  }, []);
 
   return (
     <section id="faq" className="py-24 bg-fuji-line overflow-hidden">
@@ -18,7 +30,7 @@ export default function FAQ() {
         </div>
 
         <div className="space-y-4">
-          {FAQS.map((faq, index) => (
+          {faqs.map((faq, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 10 }}
@@ -50,7 +62,7 @@ export default function FAQ() {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="p-6 pt-0 ml-12 text-slate-500 leading-relaxed font-medium">
+                    <div className="p-6 pt-0 ml-12 text-slate-500 leading-relaxed font-medium whitespace-pre-line">
                       {faq.a}
                     </div>
                   </motion.div>

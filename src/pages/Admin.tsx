@@ -59,6 +59,11 @@ interface Job {
   description: string;
 }
 
+interface FAQ {
+  q: string;
+  a: string;
+}
+
 interface ConfiguratorOption {
   id: string;
   name: string;
@@ -79,6 +84,8 @@ interface WebContent {
   zalo?: string;
   facebook?: string;
   address?: string;
+  mapIframeSrc?: string;
+  mapShareLink?: string;
 }
 
 const CHART_DATA = [
@@ -97,8 +104,7 @@ const DISTRIBUTION_DATA = [
   { name: 'Inox', value: 200 },
 ];
 
-type Tab = 'dashboard' | 'content' | 'jobs' | 'users' | 'images' | 'settings' | 'warranty' | 'web_content' | 'configurator';
-
+type Tab = 'dashboard' | 'content' | 'jobs' | 'users' | 'images' | 'settings' | 'warranty' | 'web_content' | 'configurator' | 'faq'
 const ADMIN_EMAIL = 'info.fujirise@gmail.com';
 
 export default function Admin() {
@@ -376,6 +382,7 @@ export default function Admin() {
           <p className="px-4 text-[10px] font-black uppercase text-white/30 tracking-widest mb-4">Danh mục</p>
           <NavBtn icon={<ImageIcon size={20} />} label="Sản phẩm" active={activeTab === 'images'} onClick={() => setActiveTab('images')} />
           <NavBtn icon={<Palette size={20} />} label="Mô phỏng" active={activeTab === 'configurator'} onClick={() => setActiveTab('configurator')} />
+          <NavBtn icon={<HelpCircle size={20} />} label="Hỏi đáp (FAQ)" active={activeTab === 'faq'} onClick={() => setActiveTab('faq')} />
           <NavBtn icon={<ShieldCheck size={20} />} label="Chính sách" active={activeTab === 'warranty'} onClick={() => setActiveTab('warranty')} />
           
           <div className="h-4" />
@@ -419,6 +426,7 @@ export default function Admin() {
                activeTab === 'jobs' ? 'Quản lý Tuyển dụng' :
                activeTab === 'images' ? 'Sản phẩm' :
                activeTab === 'users' ? 'Ứng tuyển' : 
+               activeTab === 'faq' ? 'Hỏi & Đáp (FAQ)' :
                activeTab === 'configurator' ? 'Mô phỏng Nội thất' :
                activeTab === 'warranty' ? 'Chính sách' : 
                activeTab === 'web_content' ? 'Nội dung Web' : 'Cài đặt'}
@@ -460,6 +468,7 @@ export default function Admin() {
               {activeTab === 'users' && <LeadManager type="recruitment" />}
               {activeTab === 'jobs' && <JobManager />}
               {activeTab === 'images' && <ProductManager />}
+              {activeTab === 'faq' && <FAQManager />}
               {activeTab === 'configurator' && <ConfiguratorManager />}
               {activeTab === 'warranty' && <WarrantyManager />}
               {activeTab === 'web_content' && <WebContentManager />}
@@ -679,6 +688,68 @@ function LeadManager({ type }: { type: 'consultation' | 'recruitment' }) {
   );
 }
 
+function FAQManager() {
+  const [faqs, setFaqs] = React.useState<FAQ[]>([]);
+
+  React.useEffect(() => {
+    const fetchFaqs = async () => {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      if (data?.content_dict?.faqs) {
+        setFaqs(data.content_dict.faqs);
+      }
+    };
+    fetchFaqs();
+  }, []);
+
+  const saveFaqs = async () => {
+    const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+    const currentDict = data?.content_dict || {};
+    currentDict.faqs = faqs;
+    
+    await supabase.from('site_settings').update({ content_dict: currentDict }).eq('id', 'default');
+    alert('Đã lưu danh sách Hỏi & Đáp!');
+  };
+
+  const addFaq = () => setFaqs([...faqs, { q: 'Câu hỏi mới', a: 'Câu trả lời...' }]);
+  const updateFaq = (index: number, field: keyof FAQ, value: string) => {
+    const newFaqs = [...faqs];
+    newFaqs[index][field] = value;
+    setFaqs(newFaqs);
+  };
+  const removeFaq = (index: number) => setFaqs(faqs.filter((_, i) => i !== index));
+
+  return (
+    <div className="space-y-8 max-w-5xl mx-auto">
+      <div className="bg-white rounded-[40px] p-12 shadow-sm border border-slate-100">
+         <div className="flex justify-between items-center mb-8">
+           <h3 className="text-xl font-black text-fuji-blue uppercase tracking-tight flex items-center gap-3">
+             <HelpCircle size={20} className="text-fuji-accent" /> Quản lý Hỏi & Đáp (FAQ)
+           </h3>
+           <button onClick={addFaq} className="px-6 py-3 bg-fuji-blue text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-fuji-accent transition-all flex items-center gap-2">
+             <Plus size={14} /> Thêm câu hỏi
+           </button>
+         </div>
+         <div className="space-y-6">
+           {faqs.map((faq, index) => (
+             <div key={index} className="p-6 bg-slate-50 rounded-3xl border border-slate-100 relative group">
+               <button onClick={() => removeFaq(index)} className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
+               <div className="space-y-4">
+                 <Input label={`Câu hỏi ${index + 1}`} value={faq.q} onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFaq(index, 'q', e.target.value)} />
+                 <Textarea label="Câu trả lời" value={faq.a} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFaq(index, 'a', e.target.value)} rows={4} />
+               </div>
+             </div>
+           ))}
+           {faqs.length === 0 && <p className="text-center text-slate-400 py-10 font-bold italic">Chưa có câu hỏi nào. Hãy thêm mới!</p>}
+         </div>
+      </div>
+      
+      <div className="flex justify-end">
+         <button onClick={saveFaqs} className="px-10 py-4 bg-fuji-blue text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-fuji-accent transition-all active:scale-95">Lưu danh sách FAQ</button>
+      </div>
+    </div>
+  );
+}
+
 function JobManager() {
   const [jobs, setJobs] = React.useState<Job[]>([]);
   const [formConfig, setFormConfig] = React.useState({ 
@@ -788,15 +859,11 @@ function ProductManager() {
       } else {
         setProducts(PRODUCTS.map((p: any) => ({
           ...p,
-          model: 'GEH100S - Thang không đối trọng, công nghệ cáp dẹt',
           category: 'Thang máy Homelife',
           technology: 'Cáp kéo',
           specs: { load: '350kg', speed: '0.4 m/s', pit: '250mm', oh: '2850 mm', travel: '< hoặc = 15m', stops: '< hoặc = 6', door: 'Mở tâm 2 cánh, mở 1 cánh, mở bản lề tự động', structure: 'Hố thang xây hoặc hố sử dụng khung hợp kim nhôm / Khung thép' },
           cabin: {
-            material: 'Lựa chọn linh hoạt giữa inox sọc nhuyễn, inox hoa văn tinh xảo hoặc kính cường lực hiện đại, phù hợp nhiều phong cách thiết kế.',
-            backWall: 'Tạo điểm nhấn đẳng cấp, nâng tầm thẩm mỹ không gian nội thất.',
-            floor: 'Chống trơn trượt, dễ vệ sinh, đảm bảo an toàn và độ bền trong quá trình sử dụng.',
-            ceiling: 'Hệ thống chiếu sáng với hiệu ứng ánh sáng hiện đại, mang lại cảm giác ấm cúng và sang trọng.'
+            material: 'Lựa chọn linh hoạt giữa inox sọc nhuyễn, inox hoa văn tinh xảo hoặc kính cường lực hiện đại, phù hợp nhiều phong cách thiết kế.\nTạo điểm nhấn đẳng cấp, nâng tầm thẩm mỹ không gian nội thất.\nChống trơn trượt, dễ vệ sinh, đảm bảo an toàn và độ bền trong quá trình sử dụng.'
           }
         })) as Product[]);
       }
@@ -865,11 +932,10 @@ function ProductManager() {
             description: '', 
             images: [], 
             image: '', 
-            model: '', 
             category: 'Thang máy Homelife', 
             technology: 'Cáp kéo', 
             specs: { load: '', speed: '', pit: '', oh: '', travel: '', stops: '', door: '', structure: '' }, 
-            cabin: { material: '', backWall: '', floor: '', ceiling: '' } 
+            cabin: { material: '' } 
           } as Product)}
           className="px-6 py-3 bg-fuji-accent text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 group hover:bg-fuji-blue transition-all"
         >
@@ -881,7 +947,7 @@ function ProductManager() {
         {products.map(product => (
           <div key={product.id} className="bg-white rounded-[50px] p-8 shadow-sm border border-slate-100 grid md:grid-cols-5 gap-8 group">
             <div className="md:col-span-2 h-64 rounded-[40px] overflow-hidden relative">
-              <img src={product.images?.[0] || product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+              <img src={product.images?.[0] || product.image} className="w-full h-full object-contain bg-slate-50 group-hover:scale-110 transition-transform duration-700" />
               <div className="absolute inset-0 bg-fuji-blue/20" />
             </div>
             <div className="md:col-span-3">
@@ -889,7 +955,7 @@ function ProductManager() {
                 <div>
                   <span className="text-[9px] font-black text-fuji-accent uppercase tracking-widest">{product.category}</span>
                   <h3 className="text-xl font-black text-fuji-blue uppercase tracking-tight">{product.title}</h3>
-                  <p className="text-[10px] text-slate-400 font-bold">Model: {product.model} - {product.technology}</p>
+                  {product.technology && <p className="text-[10px] text-slate-400 font-bold">Công nghệ: {product.technology}</p>}
                 </div>
                 <div className="flex gap-2">
                    <button onClick={() => setIsEditing(product)} className="w-9 h-9 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center hover:bg-fuji-blue hover:text-white transition-all"><Edit2 size={14} /></button>
@@ -924,7 +990,7 @@ function ProductManager() {
               </div>
               <div className="space-y-1">
                 <p className="text-[8px] text-fuji-accent font-black uppercase">Cabin Detail</p>
-                <p className="text-[10px] text-slate-500 line-clamp-2 italic font-medium leading-relaxed">Vật liệu: {product.cabin?.material || 'Chưa cập nhật'}</p>
+                <p className="text-[10px] text-slate-500 line-clamp-2 italic font-medium leading-relaxed">{product.cabin?.material || 'Chưa cập nhật'}</p>
               </div>
             </div>
           </div>
@@ -949,7 +1015,6 @@ function ProductManager() {
                     ...isEditing,
                     title: (formData.get('title') as string) || isEditing?.title || '',
                     description: (formData.get('description') as string) || isEditing?.description,
-                    model: (formData.get('model') as string) || isEditing?.model,
                     category: (formData.get('category') as string) || isEditing?.category,
                     technology: (formData.get('technology') as string) || isEditing?.technology,
                     specs: {
@@ -966,9 +1031,6 @@ function ProductManager() {
                     cabin: {
                       ...(isEditing?.cabin || {}),
                       material: (formData.get('material') as string) || isEditing?.cabin?.material,
-                      backWall: (formData.get('backWall') as string) || isEditing?.cabin?.backWall,
-                      floor: (formData.get('floor') as string) || isEditing?.cabin?.floor,
-                      ceiling: (formData.get('ceiling') as string) || isEditing?.cabin?.ceiling,
                     }
                   };
 
@@ -999,7 +1061,6 @@ function ProductManager() {
                        <p className="text-[10px] font-black uppercase tracking-widest text-fuji-accent border-b pb-2">Thông tin cơ bản</p>
                        <Input name="title" label="Tên sản phẩm" defaultValue={isEditing?.title} />
                        <Textarea name="description" label="Mô tả ngắn" defaultValue={isEditing?.description} />
-                       <Input name="model" label="Model" defaultValue={isEditing?.model} />
                        <Input name="category" label="Danh mục" defaultValue={isEditing?.category} />
                        <Input name="technology" label="Công nghệ" defaultValue={isEditing?.technology} />
                        <div className="space-y-2">
@@ -1046,10 +1107,7 @@ function ProductManager() {
                  <div className="space-y-4">
                     <p className="text-[10px] font-black uppercase tracking-widest text-fuji-accent border-b pb-2">Chi tiết Cabin</p>
                     <div className="grid md:grid-cols-1 gap-6">
-                       <Textarea name="material" label="Chất liệu cabin cao cấp" defaultValue={isEditing?.cabin?.material} />
-                       <Textarea name="backWall" label="Vách sau ốp đá" defaultValue={isEditing?.cabin?.backWall} />
-                       <Textarea name="floor" label="Sàn PVC" defaultValue={isEditing?.cabin?.floor} />
-                       <Textarea name="ceiling" label="Trần đèn trang trí" defaultValue={isEditing?.cabin?.ceiling} />
+                       <Textarea name="material" label="Mô tả chi tiết cấu hình Cabin (Vật liệu, vách, sàn, trần...)" defaultValue={isEditing?.cabin?.material} rows={5} />
                     </div>
                  </div>
                  <div className="flex gap-4 pt-6">
@@ -1384,7 +1442,9 @@ function WebContentManager() {
     email: "info.fujirise@gmail.com",
     zalo: "https://zalo.me/0868822210",
     facebook: "https://facebook.com/fujirise",
-    address: "Tầng 2, VA03B-6 Villa Hoàng Thành, Mỗ Lao, Hà Đông, Hà Nội"
+    address: "Tầng 2, VA03B-6 Villa Hoàng Thành, Mỗ Lao, Hà Đông, Hà Nội",
+    mapIframeSrc: "",
+    mapShareLink: ""
   });
 
   React.useEffect(() => {
@@ -1409,6 +1469,8 @@ function WebContentManager() {
       zalo: formData.get('zalo') as string,
       facebook: formData.get('facebook') as string,
       address: formData.get('address') as string,
+      mapIframeSrc: formData.get('mapIframeSrc') as string,
+      mapShareLink: formData.get('mapShareLink') as string,
     };
 
     try {
@@ -1485,6 +1547,10 @@ function WebContentManager() {
           <Input name="facebook" label="Link Facebook" defaultValue={content.facebook} />
         </div>
         <Textarea name="address" label="Địa chỉ văn phòng" defaultValue={content.address} />
+        <div className="grid md:grid-cols-2 gap-6 mt-6">
+          <Input name="mapIframeSrc" label="Link nhúng bản đồ (Iframe URL)" defaultValue={content.mapIframeSrc} placeholder="Bỏ trống để tự động tạo từ địa chỉ" />
+          <Input name="mapShareLink" label="Link Google Maps (Share Link)" defaultValue={content.mapShareLink} placeholder="Bỏ trống để tự động tạo từ địa chỉ" />
+        </div>
       </div>
 
       <div className="flex justify-end">
@@ -1529,7 +1595,7 @@ function Textarea({ label, ...props }: React.TextareaHTMLAttributes<HTMLTextArea
   return (
     <div className="space-y-1">
        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">{label}</label>
-       <textarea {...props} rows={2} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-fuji-blue focus:bg-white focus:ring-2 focus:ring-fuji-accent/10 transition-all resize-none" />
+       <textarea {...props} rows={props.rows || 2} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-fuji-blue focus:bg-white focus:ring-2 focus:ring-fuji-accent/10 transition-all resize-none" />
     </div>
   );
 }

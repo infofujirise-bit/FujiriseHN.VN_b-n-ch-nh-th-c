@@ -1,4 +1,4 @@
-# Hướng dẫn sử dụng Website Fujirise Elevator
+# Hướng dẫn sử dụng Website Fujirise
 
 Chào mừng bạn đến với hệ thống website thang máy gia đình cao cấp Fujirise. Đây là website được lập trình với cấu trúc chuyên nghiệp, dễ dàng mở rộng và tối ưu cho SEO.
 

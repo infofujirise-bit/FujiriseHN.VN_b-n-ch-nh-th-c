@@ -27,7 +27,7 @@ function ImageCarousel({ images, title }: { images: string[], title: string }) {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.8 }}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain bg-slate-50/50"
         />
       </AnimatePresence>
       <div className="absolute inset-0 bg-gradient-to-t from-fuji-blue via-transparent to-transparent opacity-60" />
@@ -248,66 +248,97 @@ export default function Products() {
                       </h3>
                       <p className="text-slate-500 text-base lg:text-lg mb-8 font-medium leading-relaxed">{selectedProduct.description}</p>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6 mb-8">
-                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
-                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
-                            <MoveUp size={14} className="text-fuji-accent" /> Tải trọng
-                          </p>
-                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.load}</p>
-                        </div>
-                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
-                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
-                            <Zap size={14} className="text-fuji-accent" /> Tốc độ
-                          </p>
-                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.speed}</p>
-                        </div>
-                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
-                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
-                            <Cog size={14} className="text-fuji-accent" /> Hố Pit
-                          </p>
-                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.pit}</p>
-                        </div>
-                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
-                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
-                            <MoveUp size={14} className="text-fuji-accent" /> OH
-                          </p>
-                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.oh}</p>
-                        </div>
-                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
-                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
-                            <Globe size={14} className="text-fuji-accent" /> Hành trình
-                          </p>
-                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.travel}</p>
-                        </div>
-                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
-                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
-                            <Zap size={14} className="text-fuji-accent" /> Điểm dừng
-                          </p>
-                          <p className="font-black text-xl lg:text-2xl text-fuji-blue tracking-tight">{selectedProduct.specs?.stops}</p>
-                        </div>
-                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
-                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
-                            <Cog size={14} className="text-fuji-accent" /> Cửa mở
-                          </p>
-                          <p className="font-black text-lg lg:text-xl text-fuji-blue tracking-tight">{selectedProduct.specs?.door}</p>
-                        </div>
-                        <div className="space-y-2 border-l-2 border-fuji-line pl-6">
-                          <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3">
-                            <Globe size={14} className="text-fuji-accent" /> Cấu trúc
-                          </p>
-                          <p className="font-black text-lg lg:text-xl text-fuji-blue tracking-tight">{selectedProduct.specs?.structure}</p>
-                        </div>
+                      <div className="flex flex-col mb-10 border-t border-fuji-line">
+                        {selectedProduct.specs?.load && (
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between py-4 border-b border-fuji-line gap-2">
+                            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3 shrink-0 sm:mt-1">
+                              <MoveUp size={14} className="text-fuji-accent" /> Tải trọng
+                            </p>
+                            <p className="font-bold text-sm lg:text-base text-fuji-blue sm:text-right">
+                              {selectedProduct.specs.load}
+                            </p>
+                          </div>
+                        )}
+                        {selectedProduct.specs?.speed && (
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between py-4 border-b border-fuji-line gap-2">
+                            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3 shrink-0 sm:mt-1">
+                              <Zap size={14} className="text-fuji-accent" /> Tốc độ
+                            </p>
+                            <p className="font-bold text-sm lg:text-base text-fuji-blue sm:text-right">
+                              {selectedProduct.specs.speed}
+                            </p>
+                          </div>
+                        )}
+                        {selectedProduct.specs?.pit && (
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between py-4 border-b border-fuji-line gap-2">
+                            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3 shrink-0 sm:mt-1">
+                              <Cog size={14} className="text-fuji-accent" /> Hố Pit
+                            </p>
+                            <p className="font-bold text-sm lg:text-base text-fuji-blue sm:text-right">
+                              {selectedProduct.specs.pit}
+                            </p>
+                          </div>
+                        )}
+                        {selectedProduct.specs?.oh && (
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between py-4 border-b border-fuji-line gap-2">
+                            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3 shrink-0 sm:mt-1">
+                              <MoveUp size={14} className="text-fuji-accent" /> OH
+                            </p>
+                            <p className="font-bold text-sm lg:text-base text-fuji-blue sm:text-right">
+                              {selectedProduct.specs.oh}
+                            </p>
+                          </div>
+                        )}
+                        {selectedProduct.specs?.travel && (
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between py-4 border-b border-fuji-line gap-2">
+                            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3 shrink-0 sm:mt-1">
+                              <Globe size={14} className="text-fuji-accent" /> Hành trình
+                            </p>
+                            <p className="font-bold text-sm lg:text-base text-fuji-blue sm:text-right">
+                              {selectedProduct.specs.travel}
+                            </p>
+                          </div>
+                        )}
+                        {selectedProduct.specs?.stops && (
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between py-4 border-b border-fuji-line gap-2">
+                            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3 shrink-0 sm:mt-1">
+                              <Zap size={14} className="text-fuji-accent" /> Điểm dừng
+                            </p>
+                            <p className="font-bold text-sm lg:text-base text-fuji-blue sm:text-right">
+                              {selectedProduct.specs.stops}
+                            </p>
+                          </div>
+                        )}
+                        {selectedProduct.specs?.door && (
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between py-4 border-b border-fuji-line gap-2">
+                            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3 shrink-0 sm:mt-1">
+                              <Cog size={14} className="text-fuji-accent" /> Cửa mở
+                            </p>
+                            <p className="font-bold text-sm lg:text-base text-fuji-blue sm:text-right max-w-sm">
+                              {selectedProduct.specs.door}
+                            </p>
+                          </div>
+                        )}
+                        {selectedProduct.specs?.structure && (
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between py-4 border-b border-fuji-line gap-2">
+                            <p className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest flex items-center gap-3 shrink-0 sm:mt-1">
+                              <Globe size={14} className="text-fuji-accent" /> Cấu trúc
+                            </p>
+                            <p className="font-bold text-sm lg:text-base text-fuji-blue sm:text-right max-w-sm">
+                              {selectedProduct.specs.structure}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
-                      <div className="p-8 bg-fuji-line/50 border border-fuji-line rounded-[30px] mb-12 space-y-4">
-                          <p className="text-[11px] font-black uppercase text-fuji-blue/50 mb-4 tracking-widest">Chi tiết cấu hình Cabin</p>
-                          <div className="space-y-3">
-                            <p className="text-sm font-medium text-slate-600"><strong className="text-fuji-blue">Chất liệu:</strong> {selectedProduct.cabin?.material}</p>
-                            <p className="text-sm font-medium text-slate-600"><strong className="text-fuji-blue">Vách sau:</strong> {selectedProduct.cabin?.backWall}</p>
-                            <p className="text-sm font-medium text-slate-600"><strong className="text-fuji-blue">Sàn:</strong> {selectedProduct.cabin?.floor}</p>
-                            <p className="text-sm font-medium text-slate-600"><strong className="text-fuji-blue">Trần đèn:</strong> {selectedProduct.cabin?.ceiling}</p>
-                          </div>
-                      </div>
+                      {selectedProduct.cabin?.material && (
+                        <div className="p-8 bg-fuji-line/50 border border-fuji-line rounded-[30px] mb-12 space-y-4">
+                            <p className="text-[11px] font-black uppercase text-fuji-blue/50 mb-4 tracking-widest">Chi tiết cấu hình Cabin</p>
+                            <div className="text-sm font-medium text-slate-600 leading-relaxed whitespace-pre-line">
+                              {selectedProduct.cabin.material}
+                            </div>
+                        </div>
+                      )}
 
                       <button 
                         onClick={() => setShowQuoteForm(true)}
