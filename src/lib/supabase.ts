@@ -89,6 +89,18 @@ export interface Product {
   };
 }
 
+export interface Post {
+  id: number;
+  title: string;
+  category: string;
+  summary: string;
+  content?: string;
+  images?: string[];
+  imageUrl?: string;
+  link?: string;
+  createdAt: string;
+}
+
 export interface PageView {
   id?: number;
   path: string;

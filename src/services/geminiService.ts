@@ -1,10 +1,18 @@
-import { GoogleGenAI } from "@google/genai";
 import { supabase } from "../lib/supabase";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "AIzaSyDzUO_-yu0h0gWMSB5asCZjOuYXviXpBus" });
 
 export const analyzeMarketingData = async () => {
   try {
+    let apiKey = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyDzUO_-yu0h0gWMSB5asCZjOuYXviXpBus";
+    try {
+      const { data: settings } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      if (settings?.content_dict?.api_config?.aiKey) {
+        apiKey = settings.content_dict.api_config.aiKey;
+      }
+    } catch (e) {
+      console.error("Could not fetch dynamic Gemini Key");
+    }
+    
     const { data: leads } = await supabase
       .from('leads')
       .select('*')
@@ -26,14 +34,21 @@ export const analyzeMarketingData = async () => {
       Yêu cầu: Viết ngắn gọn, chuyên nghiệp, bằng tiếng Việt, dưới định dạng văn bản có thể gửi qua Telegram.
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
     });
 
-    return response.text;
-  } catch (error) {
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || "Unknown AI API error");
+    
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || "Không nhận được nội dung từ AI.";
+  } catch (error: any) {
     console.error("AI Analysis Error:", error);
-    return "Lỗi khi phân tích dữ liệu AI.";
+    return `Lỗi khi phân tích dữ liệu AI: ${error.message || "Chi tiết lỗi không xác định."}`;
   }
 };

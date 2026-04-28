@@ -26,7 +26,12 @@ Hệ thống sử dụng 3 bảng dữ liệu chính và 1 kho lưu trữ (Stora
 - `status`: text (Mặc định là 'new')
 - `created_at`: timestamptz (Mặc định `now()`)
 
-**Bảng `admins`:** Chứa `id`, `email`, `password`, `role` để đăng nhập trang quản trị.
+**Bảng `admins` (Lưu tài khoản nhân viên):**
+- `id`: uuid (Primary Key, tự động tạo)
+- `email`: text (Email đăng nhập)
+- `password`: text (Mật khẩu)
+- `full_name`: text (Tên hiển thị)
+- `role`: text (Vai trò: `admin` cho toàn quyền, `editor` cho quyền sửa nội dung)
 
 **Bảng `site_settings`:** Chứa `id` ('default') và `content_dict` (JSONB) lưu toàn bộ cài đặt động của website (sản phẩm, mô phỏng, tuyển dụng, giao diện).
 

@@ -205,39 +205,6 @@ export default function Contact() {
             )}
           </div>
         </div>
-
-        {/* Map Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-24 relative h-[400px] rounded-[40px] overflow-hidden shadow-2xl group cursor-pointer"
-        >
-          <a 
-            href={companyInfo.mapShareLink}
-            target="_blank" 
-            rel="noreferrer"
-            className="absolute inset-0 z-20 flex items-center justify-center bg-fuji-blue/0 group-hover:bg-fuji-blue/40 transition-colors duration-500"
-          >
-            <div className="opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500 bg-white text-fuji-blue px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl flex items-center gap-3">
-              <MapPin size={18} className="text-fuji-accent" /> Xem trên Google Maps <ArrowRight size={16} />
-            </div>
-          </a>
-          <iframe 
-            src={companyInfo.mapIframeSrc}
-            className="absolute inset-0 w-full h-full border-0 pointer-events-none grayscale group-hover:grayscale-0 transition-all duration-1000"
-            allowFullScreen={false}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-          
-          {/* Overlay badge (visible before hover) */}
-          <div className="absolute top-6 left-6 md:top-8 md:left-8 z-10 bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-xl max-w-sm group-hover:opacity-0 transition-opacity duration-500 pointer-events-none border border-white">
-             <p className="text-[10px] font-black uppercase tracking-widest text-fuji-accent mb-2">Trụ sở chính</p>
-             <h4 className="text-lg font-black text-fuji-blue mb-1">Fujirise</h4>
-             <p className="text-xs font-medium text-slate-500 leading-relaxed">{companyInfo.address}</p>
-          </div>
-        </motion.div>
       </div>
     </div>
   </section>

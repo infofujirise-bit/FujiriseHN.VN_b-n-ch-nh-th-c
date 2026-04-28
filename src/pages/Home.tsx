@@ -7,6 +7,7 @@ import Contact from '../components/Contact';
 import Careers from '../components/Careers';
 import FAQ from '../components/FAQ';
 import Configurator from '../components/Configurator';
+import News from '../components/News';
 import Footer from '../components/Footer';
 import FloatingActions from '../components/FloatingActions';
 import { supabase } from '../lib/supabase';
@@ -55,8 +56,11 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             >
               <span className="text-[10px] font-black uppercase tracking-[0.4em] text-fuji-accent mb-6 block">Về chúng tôi</span>
-              <h2 className="text-5xl md:text-7xl font-black text-fuji-blue tracking-tighter leading-[0.9] mb-10">
-                THIẾT LẬP <br/><span className="text-slate-300">TIÊU CHUẨN SỐNG</span>
+              <h2 className="text-5xl md:text-7xl font-black text-fuji-blue tracking-tighter leading-[1.1] mb-10">
+                THIẾT LẬP <br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-300 to-slate-500 italic pr-2">
+                  TIÊU CHUẨN SỐNG
+                </span>
               </h2>
               <p className="text-slate-600 text-xl font-medium leading-relaxed mb-8">
                 Fujirise không chỉ kiến tạo giải pháp di động, chúng tôi định hình phong cách sống hiện đại và an tâm bậc nhất cho mọi gia đình Việt.
@@ -116,6 +120,7 @@ export default function Home() {
       </section>
       
       <Configurator />
+      <News />
       <FAQ />
       <Careers />
       <Contact />

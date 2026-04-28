@@ -2,14 +2,52 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { CONTACT_INFO } from '../constants';
+import { supabase } from '../lib/supabase';
 
 export default function Hero() {
+  const [content, setContent] = React.useState({
+    heroTitle: "NÂNG TẦM KHÔNG GIAN SỐNG",
+    heroDesc: "Giải pháp thang máy gia đình hiện đại, an toàn và sang trọng bậc nhất. Kiến tạo đẳng cấp vượt trội cho không gian kiến trúc Việt.",
+    heroImage: "https://images.unsplash.com/photo-1555505012-1c94d6983d7b?auto=format&fit=crop&q=80&w=2000"
+  });
+
+  React.useEffect(() => {
+    const fetchContent = async () => {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      if (data?.content_dict?.web_content) {
+        const wc = data.content_dict.web_content;
+        setContent(prev => ({
+          heroTitle: wc.heroTitle || prev.heroTitle,
+          heroDesc: wc.heroDesc || prev.heroDesc,
+          heroImage: wc.heroImage || prev.heroImage
+        }));
+      }
+    };
+    fetchContent();
+  }, []);
+
+  const formatTitle = (title: string) => {
+    // Tách tiêu đề thành 3 dòng, nhấn mạnh dòng giữa
+    const parts = title.split(' '); // "NÂNG TẦM KHÔNG GIAN SỐNG"
+    const line1 = parts.slice(0, 2).join(' '); // NÂNG TẦM
+    const highlight = parts.slice(2, 4).join(' '); // KHÔNG GIAN
+    const rest = parts.slice(4).join(' '); // SỐNG
+
+    return (
+      <>
+        <span className="block">{line1}</span>
+        <span className="block text-transparent bg-clip-text bg-gradient-to-r from-fuji-accent to-yellow-400 drop-shadow-[0_0_25px_rgba(197,160,89,0.6)] py-1">{highlight}</span>
+        <span className="block">{rest}</span>
+      </>
+    );
+  };
+
   return (
     <section id="home" className="relative h-screen min-h-[700px] flex items-center justify-center bg-slate-900 overflow-hidden">
       {/* Background Image Layer */}
       <div className="absolute inset-0 z-0">
         <img
-          src="https://images.unsplash.com/photo-1555505012-1c94d6983d7b?auto=format&fit=crop&q=80&w=2000"
+          src={content.heroImage}
           alt="Modern Home Elevator"
           className="w-full h-full object-cover opacity-60 scale-105 transition-transform duration-[10s]"
         />
@@ -32,13 +70,12 @@ export default function Hero() {
             <div className="w-12 h-[1px] bg-fuji-accent" />
           </div>
           
-          <h1 className="text-6xl md:text-[100px] font-black text-white leading-[0.9] tracking-tighter mb-10">
-            NÂNG TẦM <br />
-            <span className="text-fuji-accent">KHÔNG GIAN</span> SỐNG
+          <h1 className="text-6xl md:text-[100px] font-black text-white leading-[1.1] md:leading-[1.15] tracking-tighter mb-10 drop-shadow-xl">
+            {formatTitle(content.heroTitle)}
           </h1>
           
-          <p className="text-white/80 text-lg md:text-2xl mb-14 leading-relaxed max-w-2xl mx-auto font-medium">
-            Giải pháp thang máy gia đình hiện đại, an toàn và sang trọng bậc nhất. Kiến tạo đẳng cấp vượt trội cho không gian kiến trúc Việt.
+          <p className="text-white/80 text-lg md:text-2xl mb-14 leading-relaxed max-w-3xl mx-auto font-medium">
+            {content.heroDesc}
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">

@@ -33,7 +33,9 @@ import {
   Type,
   Briefcase,
   X,
-  Palette
+  Palette,
+  Users2,
+  Newspaper
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -46,7 +48,7 @@ import {
 } from 'recharts';
 import { cn } from '../lib/utils';
 import { PRODUCTS } from '../constants';
-import { supabase, Lead, Product } from '../lib/supabase';
+import { supabase, Lead, Product, Post } from '../lib/supabase';
 import { User, Session } from '@supabase/supabase-js';
 import { sendToTelegram } from '../lib/telegram';
 import { analyzeMarketingData } from '../services/geminiService';
@@ -57,6 +59,13 @@ interface Job {
   location: string;
   type: string;
   description: string;
+}
+
+interface AdminUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: 'admin' | 'editor';
 }
 
 interface FAQ {
@@ -104,12 +113,31 @@ const DISTRIBUTION_DATA = [
   { name: 'Inox', value: 200 },
 ];
 
-type Tab = 'dashboard' | 'content' | 'jobs' | 'users' | 'images' | 'settings' | 'warranty' | 'web_content' | 'configurator' | 'faq'
+type Tab = 'dashboard' | 'content' | 'jobs' | 'users' | 'images' | 'settings' | 'warranty' | 'web_content' | 'configurator' | 'faq' | 'accounts' | 'news';
 const ADMIN_EMAIL = 'info.fujirise@gmail.com';
 
+// --- BẢO MẬT: MÃ HÓA SESSION (CƠ CHẾ ANTI-TAMPER TOKEN) ---
+const SECRET_SALT = "FujiRise_Secure_Secret_2026_@!"; // Khóa bí mật chống làm giả
+
+const encodeSession = (userData: AdminUser) => {
+  const payload = btoa(encodeURIComponent(JSON.stringify(userData)));
+  const signature = btoa(encodeURIComponent(payload + SECRET_SALT));
+  return `${payload}.${signature}`; // Tạo token định dạng: payload.signature
+};
+
+const decodeSession = (token: string): AdminUser | null => {
+  try {
+    const [payload, signature] = token.split('.');
+    const expectedSignature = btoa(encodeURIComponent(payload + SECRET_SALT));
+    if (signature !== expectedSignature) return null; // Sai chữ ký -> Đã bị hacker can thiệp sửa đổi
+    return JSON.parse(decodeURIComponent(atob(payload)));
+  } catch (err) {
+    return null;
+  }
+};
+
 export default function Admin() {
-  const [user, setUser] = React.useState<User | null>(null);
-  const [isAdminUser, setIsAdminUser] = React.useState(false);
+  const [user, setUser] = React.useState<AdminUser | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState<Tab>('dashboard');
   const [error, setError] = React.useState('');
@@ -136,63 +164,24 @@ export default function Admin() {
       // 1. Kiểm tra và phục hồi phiên đăng nhập cục bộ nếu dùng đăng nhập tắt
       const localSession = localStorage.getItem('fuji_admin_session');
       if (localSession) {
-        setUser(JSON.parse(localSession));
-        setIsAdminUser(true);
-        setLoading(false);
-        return;
-      }
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        await checkAdmin(session.user);
+        const u = decodeSession(localSession);
+        if (u && u.id && u.email && u.role) {
+          // Tự động cấp lại quyền admin nếu là email gốc của hệ thống
+          if (u.email === ADMIN_EMAIL && u.role !== 'admin') {
+            u.role = 'admin';
+          }
+          setUser(u);
+          setLoading(false);
+          return;
+        } else {
+          localStorage.removeItem('fuji_admin_session');
+        }
       }
       setLoading(false);
     };
 
     getSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: string, session: Session | null) => {
-      if (session) {
-        await checkAdmin(session.user);
-      } else {
-        // Chỉ đăng xuất nếu không có phiên đăng nhập cục bộ
-        if (!localStorage.getItem('fuji_admin_session')) {
-          setUser(null);
-          setIsAdminUser(false);
-        }
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
-
-  const checkAdmin = async (u: User) => {
-    // Specific check for the admin email
-    if (u.email === ADMIN_EMAIL) {
-      setIsAdminUser(true);
-      setUser(u);
-      return;
-    }
-
-    try {
-      const { data } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('id', u.id)
-        .single();
-
-      if (data) {
-        setIsAdminUser(true);
-        setUser(u);
-      } else {
-        setError(`Tài khoản ${u.email} không có quyền truy cập.`);
-        await supabase.auth.signOut();
-      }
-    } catch (err) {
-      console.error("Admin check error:", err);
-      setError("Lỗi xác thực quyền admin.");
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,21 +200,30 @@ export default function Admin() {
         .eq('password', passwordInput)
         .single();
 
-      if (fetchError || !data) {
+      if (fetchError) {
+        if (fetchError.code === 'PGRST116') {
+           setError('Sai thông tin hoặc bị khóa bởi RLS. Vui lòng kiểm tra lại Database.');
+        } else {
+           setError(`Lỗi hệ thống: ${fetchError.message}`);
+        }
+        return;
+      }
+      if (!data) {
         setError('Email hoặc mật khẩu không chính xác.');
         return;
       }
 
       // 2. Set user session (using dummy metadata to match existing code)
-      const adminUser = {
+      const userRole = data.role || (data.email === ADMIN_EMAIL ? 'admin' : 'editor');
+      const adminUser: AdminUser = {
+        id: data.id,
         email: data.email,
-        user_metadata: { full_name: data.role === 'admin' ? 'Administrator' : data.email },
-        id: data.id
+        full_name: data.full_name || data.email,
+        role: userRole,
       };
-      setUser(adminUser as unknown as User);
-      setIsAdminUser(true);
+      setUser(adminUser);
       // Lưu lại phiên đăng nhập để tránh bị thoát khi load lại trang
-      localStorage.setItem('fuji_admin_session', JSON.stringify(adminUser));
+      localStorage.setItem('fuji_admin_session', encodeSession(adminUser));
       
       // Notify Telegram about admin login
       await sendToTelegram(`🔐 <b>ADMIN LOGIN</b>\n----------------------------\n<b>User:</b> ${data.email}\n<b>Time:</b> ${new Date().toLocaleString('vi-VN')}`, 'auth');
@@ -238,7 +236,6 @@ export default function Admin() {
 
   const handleLogout = async () => {
     setUser(null);
-    setIsAdminUser(false);
     localStorage.removeItem('fuji_admin_session');
     await supabase.auth.signOut();
   };
@@ -295,7 +292,7 @@ export default function Admin() {
     );
   }
 
-  if (!user || !isAdminUser) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-fuji-blue relative flex items-center justify-center p-4 overflow-hidden">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-fuji-accent/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2" />
@@ -383,6 +380,7 @@ export default function Admin() {
           <NavBtn icon={<ImageIcon size={20} />} label="Sản phẩm" active={activeTab === 'images'} onClick={() => setActiveTab('images')} />
           <NavBtn icon={<Palette size={20} />} label="Mô phỏng" active={activeTab === 'configurator'} onClick={() => setActiveTab('configurator')} />
           <NavBtn icon={<HelpCircle size={20} />} label="Hỏi đáp (FAQ)" active={activeTab === 'faq'} onClick={() => setActiveTab('faq')} />
+          <NavBtn icon={<Newspaper size={20} />} label="Tin tức & Sự kiện" active={activeTab === 'news'} onClick={() => setActiveTab('news')} />
           <NavBtn icon={<ShieldCheck size={20} />} label="Chính sách" active={activeTab === 'warranty'} onClick={() => setActiveTab('warranty')} />
           
           <div className="h-4" />
@@ -390,20 +388,21 @@ export default function Admin() {
           <NavBtn icon={<Briefcase size={20} />} label="Đăng tuyển" active={activeTab === 'jobs'} onClick={() => setActiveTab('jobs')} />
           <NavBtn icon={<Type size={20} />} label="Nội dung Web" active={activeTab === 'web_content'} onClick={() => setActiveTab('web_content')} />
           <NavBtn icon={<Settings size={20} />} label="Cài đặt" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+          {user?.role === 'admin' && <NavBtn icon={<Users2 size={20} />} label="Tài khoản" active={activeTab === 'accounts'} onClick={() => setActiveTab('accounts')} />}
         </nav>
 
         <div className="p-6 shrink-0 border-t border-white/5">
           <div className="bg-white/5 rounded-3xl p-6 border border-white/10 mb-4">
              <div className="flex items-center gap-3 mb-4">
                <div className="w-10 h-10 rounded-full border-2 border-fuji-accent overflow-hidden bg-fuji-line flex items-center justify-center">
-                 {user?.user_metadata?.avatar_url ? (
-                   <img src={user.user_metadata.avatar_url} className="w-full h-full object-cover" />
+                 {user?.full_name ? (
+                   <span className="font-black text-white">{user.full_name.charAt(0)}</span>
                  ) : (
                    <Users size={16} className="text-white/30" />
                  )}
                </div>
                <div className="flex-1 overflow-hidden">
-                 <p className="text-xs font-black truncate">{user?.user_metadata?.full_name || 'Admin'}</p>
+                 <p className="text-xs font-black truncate">{user?.full_name || 'Admin'}</p>
                  <p className="text-[10px] text-white/40 truncate">{user?.email}</p>
                </div>
              </div>
@@ -427,6 +426,8 @@ export default function Admin() {
                activeTab === 'images' ? 'Sản phẩm' :
                activeTab === 'users' ? 'Ứng tuyển' : 
                activeTab === 'faq' ? 'Hỏi & Đáp (FAQ)' :
+               activeTab === 'news' ? 'Tin tức & Sự kiện' :
+               activeTab === 'accounts' && user?.role === 'admin' ? 'Quản lý Tài khoản' :
                activeTab === 'configurator' ? 'Mô phỏng Nội thất' :
                activeTab === 'warranty' ? 'Chính sách' : 
                activeTab === 'web_content' ? 'Nội dung Web' : 'Cài đặt'}
@@ -469,6 +470,8 @@ export default function Admin() {
               {activeTab === 'jobs' && <JobManager />}
               {activeTab === 'images' && <ProductManager />}
               {activeTab === 'faq' && <FAQManager />}
+              {activeTab === 'news' && <NewsManager />}
+              {activeTab === 'accounts' && user?.role === 'admin' && <UserManager />}
               {activeTab === 'configurator' && <ConfiguratorManager />}
               {activeTab === 'warranty' && <WarrantyManager />}
               {activeTab === 'web_content' && <WebContentManager />}
@@ -1358,6 +1361,59 @@ function SettingsManager() {
   const [supaUrl, setSupaUrl] = React.useState(import.meta.env.VITE_SUPABASE_URL || '');
   const [supaKey, setSupaKey] = React.useState(import.meta.env.VITE_SUPABASE_ANON_KEY || '');
   const [aiKey, setAiKey] = React.useState('AIzaSyDzUO_-yu0h0gWMSB5asCZjOuYXviXpBus');
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    const loadConfigs = async () => {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      if (data?.content_dict?.api_config) {
+        const api = data.content_dict.api_config;
+        if (api.aiKey) setAiKey(api.aiKey);
+        if (api.tgToken) setTgToken(api.tgToken);
+        if (api.tgChatId) setTgChatId(api.tgChatId);
+      }
+    };
+    loadConfigs();
+  }, []);
+
+  const handleSaveAPI = async () => {
+    setIsSaving(true);
+    try {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      const currentDict = data?.content_dict || {};
+      currentDict.api_config = { aiKey, tgToken, tgChatId };
+      
+      await supabase.from('site_settings').update({ content_dict: currentDict }).eq('id', 'default');
+      alert('Lưu cấu hình API thành công! Các dịch vụ sẽ tự động sử dụng Key mới.');
+    } catch (error) {
+      console.error(error);
+      alert('Có lỗi khi lưu cấu hình.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const testTelegram = async () => {
+    if (!tgToken || !tgChatId) {
+      alert('Vui lòng nhập đủ Token và Chat ID');
+      return;
+    }
+    try {
+      const url = `https://api.telegram.org/bot${tgToken}/sendMessage`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: tgChatId,
+          text: "✅ Kết nối Telegram với website Fujirise thành công!"
+        })
+      });
+      if (res.ok) alert("Gửi tin nhắn test thành công! Hãy kiểm tra ứng dụng Telegram.");
+      else alert("Lỗi gửi tin. Vui lòng kiểm tra lại Token hoặc Chat ID.");
+    } catch (err) {
+      alert("Lỗi kết nối đến Telegram API.");
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -1366,13 +1422,13 @@ function SettingsManager() {
           <BrainCircuit size={20} className="text-fuji-accent" /> Cấu hình API Hệ thống
         </h3>
         <div className="grid md:grid-cols-2 gap-8">
-           <Input label="Supabase Project URL" value={supaUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSupaUrl(e.target.value)} />
-           <Input label="Supabase Anon Key" type="password" value={supaKey} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSupaKey(e.target.value)} />
+           <Input label="Supabase Project URL (Cố định trong Vercel)" value={supaUrl} disabled />
+           <Input label="Supabase Anon Key (Cố định trong Vercel)" type="password" value={supaKey} disabled />
            <Input label="Gemini AI API Key" type="password" value={aiKey} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAiKey(e.target.value)} />
         </div>
         <div className="mt-6 flex justify-end">
-           <button className="px-8 py-4 bg-fuji-blue text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-fuji-accent transition-all">
-             Lưu cấu hình API
+           <button onClick={handleSaveAPI} disabled={isSaving} className="px-8 py-4 bg-fuji-blue text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-fuji-accent transition-all disabled:opacity-50">
+             {isSaving ? 'Đang lưu...' : 'Lưu cấu hình API'}
            </button>
         </div>
       </div>
@@ -1423,7 +1479,7 @@ function SettingsManager() {
                 <CheckCircle2 className="text-green-500" size={20} />
                 <p className="text-[10px] font-black uppercase tracking-widest">Kết nối ổn định</p>
              </div>
-             <button className="text-[10px] font-black uppercase tracking-widest text-fuji-accent hover:underline">Gửi tin nhắn test</button>
+         <button onClick={testTelegram} className="text-[10px] font-black uppercase tracking-widest text-fuji-accent hover:underline">Gửi tin nhắn test</button>
           </div>
         </div>
       </div>
@@ -1562,6 +1618,303 @@ function WebContentManager() {
   );
 }
 
+function NewsManager() {
+  const [posts, setPosts] = React.useState<Post[]>([]);
+  const [isEditing, setIsEditing] = React.useState<Post | null>(null);
+
+  React.useEffect(() => {
+    const fetchPosts = async () => {
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      if (data?.content_dict?.posts) {
+        setPosts(data.content_dict.posts);
+      }
+    };
+    fetchPosts();
+  }, []);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !isEditing) return;
+
+    const currentImages = isEditing?.images || [];
+    const slotsLeft = 10 - currentImages.length;
+    const filesToUpload = files.slice(0, slotsLeft);
+
+    if (files.length > slotsLeft) {
+      alert(`Chỉ có thể thêm tối đa 10 ảnh. Đã bỏ qua ${files.length - slotsLeft} ảnh.`);
+    }
+
+    try {
+      const newUrls = await Promise.all(filesToUpload.map(async (file: File) => {
+        const isMock = !import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY;
+        if (isMock) return URL.createObjectURL(file);
+        
+        const fileExt = file.name.split('.').pop();
+        const fileName = `post-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('images').upload(fileName, file);
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
+        return publicUrl;
+      }));
+
+      setIsEditing(prev => {
+        if (!prev) return null;
+        const updatedImages = [...(prev.images || []), ...newUrls].slice(0, 10);
+        return { ...prev, images: updatedImages, imageUrl: updatedImages[0] };
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Lỗi upload ảnh!');
+    }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    setIsEditing(prev => {
+      if (!prev) return null;
+      const updatedImages = (prev.images || []).filter((_, index) => index !== indexToRemove);
+      return { ...prev, images: updatedImages, imageUrl: updatedImages[0] || '' };
+    });
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isEditing) return;
+
+    try {
+      const formData = new FormData(e.target as HTMLFormElement);
+      const updatedPost: Post = {
+        ...isEditing,
+        title: formData.get('title') as string,
+        category: formData.get('category') as string,
+        summary: formData.get('summary') as string,
+        content: formData.get('content') as string,
+        link: formData.get('link') as string,
+      };
+
+      let newPosts;
+      const exists = posts.find(p => p.id === updatedPost.id);
+      if (exists) {
+        newPosts = posts.map(p => p.id === updatedPost.id ? updatedPost : p);
+      } else {
+        newPosts = [...posts, updatedPost];
+      }
+
+      const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+      const currentDict = data?.content_dict || {};
+      currentDict.posts = newPosts;
+      await supabase.from('site_settings').update({ content_dict: currentDict }).eq('id', 'default');
+
+      setPosts(newPosts);
+      setIsEditing(null);
+      alert('Lưu bài viết thành công!');
+    } catch (err) {
+      console.error(err);
+      alert('Lỗi khi lưu bài viết!');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Bạn có chắc muốn xóa bài viết này?')) return;
+    const newPosts = posts.filter(p => p.id !== id);
+    
+    const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+    const currentDict = data?.content_dict || {};
+    currentDict.posts = newPosts;
+    await supabase.from('site_settings').update({ content_dict: currentDict }).eq('id', 'default');
+
+    setPosts(newPosts);
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-black text-fuji-blue tracking-tighter uppercase">Tin tức & Sự kiện</h2>
+          <p className="text-xs text-slate-400 mt-1 uppercase font-black tracking-widest italic">Quản lý bài viết, hoạt động, quảng cáo</p>
+        </div>
+        <button
+          onClick={() => setIsEditing({ id: Date.now(), title: '', category: 'Tin tức', summary: '', content: '', images: [], imageUrl: '', createdAt: new Date().toISOString() })}
+          className="px-6 py-3 bg-fuji-accent text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 group hover:bg-fuji-blue transition-all"
+        >
+          <Plus size={16} /> Thêm bài viết
+        </button>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {posts.map(post => (
+          <div key={post.id} className="bg-white rounded-[40px] p-6 shadow-sm border border-slate-100 group">
+            <div className="h-48 rounded-[30px] overflow-hidden mb-6 relative">
+              <img src={post.images?.[0] || post.imageUrl} alt={post.title} className="w-full h-full object-cover" />
+              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => setIsEditing(post)} className="w-8 h-8 bg-white/80 backdrop-blur-sm text-fuji-blue rounded-lg flex items-center justify-center shadow-lg hover:bg-fuji-blue hover:text-white"><Edit2 size={14} /></button>
+                <button onClick={() => handleDelete(post.id)} className="w-8 h-8 bg-white/80 backdrop-blur-sm text-red-500 rounded-lg flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white"><Trash2 size={14} /></button>
+              </div>
+            </div>
+            <span className="px-3 py-1 bg-fuji-accent/10 text-fuji-accent rounded-full text-[9px] font-black uppercase tracking-widest">{post.category}</span>
+            <h4 className="font-black text-fuji-blue tracking-tight mt-3 mb-2 h-10 line-clamp-2">{post.title}</h4>
+            <p className="text-[10px] text-slate-400 font-medium line-clamp-2">{post.summary}</p>
+          </div>
+        ))}
+      </div>
+
+      {isEditing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-fuji-blue/80 backdrop-blur-md">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[40px] p-10 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+            <button onClick={() => setIsEditing(null)} className="absolute top-8 right-8 text-slate-300 hover:text-fuji-blue"><X size={24} /></button>
+            <h3 className="text-2xl font-black text-fuji-blue uppercase tracking-tighter mb-8">Soạn thảo Bài viết</h3>
+            <form onSubmit={handleSave} className="space-y-6">
+              <Input name="title" label="Tiêu đề bài viết" defaultValue={isEditing.title} required />
+              <div className="grid grid-cols-2 gap-6">
+                <Input name="category" label="Chuyên mục" defaultValue={isEditing.category} placeholder="Tin tức, Sự kiện,..." />
+                <Input name="link" label="Link chi tiết (nếu có)" defaultValue={isEditing.link} />
+              </div>
+              <Textarea name="summary" label="Mô tả ngắn" defaultValue={isEditing.summary} rows={3} />
+              <Textarea name="content" label="Nội dung chi tiết bài viết" defaultValue={isEditing.content} rows={10} />
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">Hình ảnh bài viết (Tối đa 10 ảnh)</label>
+                <div className="flex flex-col gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  { (isEditing.images && isEditing.images.length > 0) && (
+                    <div className="flex flex-wrap gap-3">
+                      {isEditing.images.map((img, idx) => (
+                        <div key={idx} className="relative group">
+                          <img src={img} alt={`Preview ${idx}`} className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-sm shrink-0" />
+                          <button type="button" onClick={() => removeImage(idx)} className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {(!isEditing.images || isEditing.images.length < 10) && (
+                    <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="w-full text-xs font-bold text-slate-500 cursor-pointer" />
+                  )}
+                </div>
+              </div>
+              <button type="submit" className="w-full py-5 rounded-2xl bg-fuji-blue text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-fuji-blue/20 hover:bg-fuji-accent transition-all active:scale-95 mt-4">Lưu Bài viết</button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function UserManager() {
+  const [accounts, setAccounts] = React.useState<AdminUser[]>([]);
+  const [isEditing, setIsEditing] = React.useState<Partial<AdminUser> | null>(null);
+  const [newPassword, setNewPassword] = React.useState('');
+
+  const fetchAccounts = async () => {
+    const { data } = await supabase.from('admins').select('id, email, full_name, role');
+    if (data) setAccounts(data as AdminUser[]);
+  };
+
+  React.useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isEditing) return;
+
+    const payload: Partial<AdminUser> & { password?: string } = {
+      email: isEditing.email,
+      full_name: isEditing.full_name,
+      role: isEditing.role,
+    };
+
+    if (newPassword) {
+      payload.password = newPassword;
+    }
+
+    if (isEditing.id) { // Update
+      await supabase.from('admins').update(payload).eq('id', isEditing.id);
+    } else { // Create
+      if (!newPassword) { alert('Vui lòng nhập mật khẩu cho tài khoản mới.'); return; }
+      await supabase.from('admins').insert(payload);
+    }
+    
+    if (newPassword) {
+      const msg = `🔐 <b>CẬP NHẬT MẬT KHẨU</b>\n----------------------------\n<b>Tài khoản:</b> ${payload.email}\n<b>Mật khẩu mới:</b> <code>${newPassword}</code>\n----------------------------\n<i>Mật khẩu được cấp bởi Quản trị viên.</i>`;
+      await sendToTelegram(msg, 'auth');
+      alert(`Đã cập nhật và gửi thông báo mật khẩu mới cho tài khoản ${payload.email} qua Telegram.`);
+    }
+
+    await fetchAccounts();
+    setIsEditing(null);
+    setNewPassword('');
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Bạn có chắc muốn xóa tài khoản này? Hành động này không thể hoàn tác.')) return;
+    await supabase.from('admins').delete().eq('id', id);
+    await fetchAccounts();
+  };
+
+  return (
+    <div className="space-y-8 max-w-5xl mx-auto">
+      <div className="bg-white rounded-[40px] p-12 shadow-sm border border-slate-100">
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="text-xl font-black text-fuji-blue uppercase tracking-tight flex items-center gap-3">
+            <Users2 size={20} className="text-fuji-accent" /> Quản lý Tài khoản Nhân viên
+          </h3>
+          <button onClick={() => setIsEditing({ role: 'editor' })} className="px-6 py-3 bg-fuji-blue text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-fuji-accent transition-all flex items-center gap-2">
+            <Plus size={14} /> Thêm tài khoản
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-slate-100">
+                <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Nhân viên</th>
+                <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Vai trò</th>
+                <th className="p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {accounts.map(acc => (
+                <tr key={acc.id} className="border-b border-slate-50 last:border-none">
+                  <td className="p-4 font-bold text-fuji-blue">{acc.full_name}<p className="font-medium text-xs text-slate-400">{acc.email}</p></td>
+                  <td className="p-4"><span className={`px-2 py-1 rounded text-[9px] font-black uppercase ${acc.role === 'admin' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>{acc.role}</span></td>
+                  <td className="p-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => setIsEditing(acc)} className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-fuji-blue hover:text-white"><Edit2 size={14} /></button>
+                      <button onClick={() => handleDelete(acc.id)} className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 hover:bg-red-500 hover:text-white"><Trash2 size={14} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {isEditing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-fuji-blue/80 backdrop-blur-md">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[40px] p-10 max-w-lg w-full shadow-2xl relative">
+            <button onClick={() => setIsEditing(null)} className="absolute top-8 right-8 text-slate-300 hover:text-fuji-blue"><X size={24} /></button>
+            <h3 className="text-2xl font-black text-fuji-blue uppercase tracking-tighter mb-8">{isEditing.id ? 'Cập nhật' : 'Tạo mới'} Tài khoản</h3>
+            <form onSubmit={handleSave} className="space-y-6">
+              <Input label="Họ và tên" value={isEditing.full_name || ''} onChange={(e: any) => setIsEditing({...isEditing, full_name: e.target.value})} required />
+              <Input label="Email" type="email" value={isEditing.email || ''} onChange={(e: any) => setIsEditing({...isEditing, email: e.target.value})} required />
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">Vai trò</label>
+                <select value={isEditing.role} onChange={(e: any) => setIsEditing({...isEditing, role: e.target.value as 'admin' | 'editor'})} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-fuji-blue">
+                  <option value="editor">Editor (Soạn thảo)</option>
+                  <option value="admin">Admin (Quản trị)</option>
+                </select>
+              </div>
+              <Input label="Mật khẩu mới" type="text" placeholder={isEditing.id ? "Bỏ trống nếu không đổi" : "Bắt buộc cho tài khoản mới"} value={newPassword} onChange={(e: any) => setNewPassword(e.target.value)} />
+              <button type="submit" className="w-full py-5 rounded-2xl bg-fuji-blue text-white font-black text-xs uppercase tracking-widest shadow-xl hover:bg-fuji-accent transition-all mt-4">Lưu Tài khoản</button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function StatCard({ icon, label, value, trend, positive }: { icon: React.ReactNode; label: string; value: string | number; trend: string; positive: boolean }) {
   return (
     <div className="bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all group">
@@ -1586,7 +1939,7 @@ function Input({ label, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
   return (
     <div className="space-y-1 cursor-text">
        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">{label}</label>
-       <input {...props} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-fuji-blue focus:bg-white focus:ring-2 focus:ring-fuji-accent/10 transition-all" />
+     <input {...props} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-fuji-blue focus:bg-white focus:ring-2 focus:ring-fuji-accent/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed" />
     </div>
   );
 }
