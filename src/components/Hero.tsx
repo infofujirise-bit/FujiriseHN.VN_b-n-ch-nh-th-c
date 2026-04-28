@@ -65,7 +65,7 @@ export default function Hero() {
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="w-12 h-[1px] bg-fuji-accent" />
             <span className="text-fuji-accent text-[10px] md:text-sm uppercase font-black tracking-[0.4em]">
-              Fujirise Global Excellence
+              FUJIRISE THIẾT LẬP TIÊU CHUẨN SỐNG
             </span>
             <div className="w-12 h-[1px] bg-fuji-accent" />
           </div>

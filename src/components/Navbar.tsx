@@ -72,8 +72,8 @@ export default function Navbar() {
         className={cn(
           "transition-all duration-500",
           scrolled
-            ? "bg-white shadow-2xl shadow-fuji-blue/5 py-2"
-            : "bg-white py-3",
+            ? "bg-white shadow-2xl shadow-fuji-blue/5 py-1"
+            : "bg-white py-2",
         )}
       >
         <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-8">
@@ -85,7 +85,7 @@ export default function Navbar() {
               onError={(e) => {
                 e.currentTarget.src = logo != "" ? logo : "/logo.svg";
               }}
-              className="h-16 md:h-20 lg:h-24 w-auto object-contain hover:scale-105 transition-transform duration-500"
+              className="h-12 md:h-16 lg:h-20 w-auto object-contain hover:scale-105 transition-transform duration-500"
             />
           </a>
 
