@@ -36,7 +36,8 @@ import {
   Palette,
   Users2,
   Newspaper,
-  ThumbsUp
+  ThumbsUp,
+  Quote
 } from 'lucide-react';
 import { 
   AreaChart, 
