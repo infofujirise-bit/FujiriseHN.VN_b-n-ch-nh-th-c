@@ -119,7 +119,7 @@ export default function Contact() {
                   <Phone size={24} />
                 </div>
                 <div>
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Hotline Chăm sóc</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Hotline Chăm </h4>
                   <p className="text-fuji-blue font-black text-2xl tracking-tighter">{companyInfo.hotline}</p>
                 </div>
               </div>

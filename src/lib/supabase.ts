@@ -99,6 +99,8 @@ export interface Post {
   imageUrl?: string;
   link?: string;
   createdAt: string;
+  comments?: any[];
+  likes?: number;
 }
 
 export interface PageView {

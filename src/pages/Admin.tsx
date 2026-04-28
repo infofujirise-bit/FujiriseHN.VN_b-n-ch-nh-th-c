@@ -35,7 +35,8 @@ import {
   X,
   Palette,
   Users2,
-  Newspaper
+  Newspaper,
+  ThumbsUp
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -96,22 +97,6 @@ interface WebContent {
   mapIframeSrc?: string;
   mapShareLink?: string;
 }
-
-const CHART_DATA = [
-  { name: 'Th2', leads: 400 },
-  { name: 'Th3', leads: 300 },
-  { name: 'Th4', leads: 200 },
-  { name: 'Th5', leads: 278 },
-  { name: 'Th6', leads: 189 },
-  { name: 'Th7', leads: 239 },
-  { name: 'CN', leads: 349 },
-];
-
-const DISTRIBUTION_DATA = [
-  { name: 'Mini', value: 400 },
-  { name: 'Kính', value: 300 },
-  { name: 'Inox', value: 200 },
-];
 
 type Tab = 'dashboard' | 'content' | 'jobs' | 'users' | 'images' | 'settings' | 'warranty' | 'web_content' | 'configurator' | 'faq' | 'accounts' | 'news';
 const ADMIN_EMAIL = 'info.fujirise@gmail.com';
@@ -510,16 +495,62 @@ function NavBtn({ icon, label, active, onClick, disabled }: { icon: React.ReactN
 }
 
 function Dashboard() {
-  const [stats, setStats] = React.useState({ totalLeads: 0, newLeads: 0, conversion: '3.2%' });
+  const [stats, setStats] = React.useState({ totalLeads: 0, newLeads: 0, conversion: '0.0%', completionRate: 0 });
+  const [chartData, setChartData] = React.useState<{name: string, leads: number}[]>([]);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
 
   React.useEffect(() => {
-    const fetchStats = async () => {
-      const { count } = await supabase.from('leads').select('*', { count: 'exact', head: true });
-      const { count: newCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'new');
-      setStats({ totalLeads: count || 0, newLeads: newCount || 0, conversion: '3.2%' });
+    const fetchDashboardData = async () => {
+      const { data: leadsData } = await supabase.from('leads').select('status, created_at');
+      
+      if (leadsData) {
+        const total = leadsData.length;
+        const newLeads = leadsData.filter((l: Lead) => l.status === 'new').length;
+        const completedLeads = leadsData.filter((l: Lead) => l.status === 'completed').length;
+        
+        // Tỉ lệ hoàn thành công việc (Số lead đã xử lý xong so với tổng)
+        const processedLeads = total - newLeads;
+        const completionRate = total > 0 ? Math.round((processedLeads / total) * 100) : 0;
+        // Tỉ lệ chốt sale thành công
+        const conversionRate = total > 0 ? ((completedLeads / total) * 100).toFixed(1) : '0.0';
+
+        setStats({
+          totalLeads: total,
+          newLeads: newLeads,
+          conversion: `${conversionRate}%`,
+          completionRate: completionRate
+        });
+
+        // Tạo dữ liệu biểu đồ 7 tháng gần nhất
+        const months = ['Th1', 'Th2', 'Th3', 'Th4', 'Th5', 'Th6', 'Th7', 'Th8', 'Th9', 'Th10', 'Th11', 'Th12'];
+        const currentMonth = new Date().getMonth();
+        const cData: { name: string, monthIndex: number, year: number, leads: number }[] = [];
+        for (let i = 6; i >= 0; i--) {
+          let mIndex = currentMonth - i;
+          let yearOffset = 0;
+          if (mIndex < 0) { mIndex += 12; yearOffset = -1; }
+          cData.push({ name: months[mIndex], monthIndex: mIndex, year: new Date().getFullYear() + yearOffset, leads: 0 });
+        }
+
+        // Phân bổ Lead vào các tháng
+        leadsData.forEach((lead: Lead) => {
+          const date = new Date(lead.created_at as string);
+          const target = cData.find(d => d.monthIndex === date.getMonth() && d.year === date.getFullYear());
+          if (target) target.leads++;
+        });
+
+        setChartData(cData.map(d => ({ name: d.name, leads: d.leads })));
+      }
     };
-    fetchStats();
+    
+    fetchDashboardData();
+    
+    // Đăng ký nhận realtime data để tự làm mới Dashboard khi có người gửi Form
+    const channel = supabase.channel('dashboard_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, fetchDashboardData)
+      .subscribe();
+      
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const handleAIMarketing = async () => {
@@ -547,9 +578,9 @@ function Dashboard() {
       </div>
 
       <div className="grid md:grid-cols-4 gap-6">
-        <StatCard icon={<MessageSquare className="text-blue-500" />} label="Tổng yêu cầu" value={stats.totalLeads} trend="+12%" positive={true} />
-        <StatCard icon={<AlertCircle className="text-orange-500" />} label="Chờ xử lý" value={stats.newLeads} trend="Urgent" positive={false} />
-        <StatCard icon={<Activity className="text-green-500" />} label="Chuyển đổi" value={stats.conversion} trend="+0.5%" positive={true} />
+        <StatCard icon={<MessageSquare className="text-blue-500" />} label="Tổng yêu cầu" value={stats.totalLeads} trend="Thực tế" positive={true} />
+        <StatCard icon={<AlertCircle className="text-orange-500" />} label="Chờ xử lý" value={stats.newLeads} trend={stats.newLeads > 0 ? "Cần xử lý" : "An toàn"} positive={stats.newLeads === 0} />
+        <StatCard icon={<Activity className="text-green-500" />} label="Tỉ lệ Chuyển đổi" value={stats.conversion} trend="Thành công" positive={true} />
         <StatCard icon={<ShieldCheck className="text-indigo-500" />} label="Hệ thống" value="Active" trend="Stable" positive={true} />
       </div>
 
@@ -557,7 +588,7 @@ function Dashboard() {
         <div className="lg:col-span-2 bg-white rounded-[40px] p-8 shadow-sm border border-slate-100">
            <div className="h-[300px] w-full">
              <ResponsiveContainer width="100%" height="100%">
-               <AreaChart data={CHART_DATA}>
+               <AreaChart data={chartData}>
                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 700 }} dy={10} />
                  <YAxis hide />
@@ -572,10 +603,10 @@ function Dashboard() {
             <div className="relative w-48 h-48 mx-auto">
                <svg className="w-full h-full" viewBox="0 0 100 100">
                  <circle cx="50" cy="50" r="45" fill="none" stroke="#f1f5f9" strokeWidth="10" />
-                 <circle cx="50" cy="50" r="45" fill="none" stroke="#C5A059" strokeWidth="10" strokeDasharray="210 283" strokeLinecap="round" />
+                 <circle cx="50" cy="50" r="45" fill="none" stroke="#C5A059" strokeWidth="10" strokeDasharray={`${(stats.completionRate / 100) * 282.74} 283`} strokeLinecap="round" className="transition-all duration-1000" />
                </svg>
                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                 <span className="text-3xl font-black text-fuji-blue">75%</span>
+                 <span className="text-3xl font-black text-fuji-blue">{stats.completionRate}%</span>
                  <span className="text-[10px] text-slate-400 font-black uppercase">Goal</span>
                </div>
             </div>
@@ -1625,8 +1656,42 @@ function NewsManager() {
   React.useEffect(() => {
     const fetchPosts = async () => {
       const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
-      if (data?.content_dict?.posts) {
+      if (data?.content_dict?.posts && data.content_dict.posts.length > 0) {
         setPosts(data.content_dict.posts);
+      } else {
+        // Tạo 10 tin tức mẫu để kiểm thử
+        const postData = [
+          { title: "Triển lãm Công nghệ Thang máy Gia đình Quốc tế 2024", cat: "Sự kiện", sum: "Fujirise hân hạnh góp mặt tại triển lãm công nghệ lớn nhất năm với hệ sinh thái thang máy thông minh mới nhất." },
+          { title: "Ra mắt dòng thang máy kính không hố pit hoàn toàn mới", cat: "Tin tức", sum: "Giải pháp đột phá cho nhà cải tạo: Thang máy kính 360 độ không yêu cầu đào sâu nền móng, giữ nguyên cấu trúc nhà." },
+          { title: "Fujirise ký kết đối tác chiến lược với hãng linh kiện Nhật Bản", cat: "Hoạt động", sum: "Đánh dấu bước ngoặt trong việc nâng cấp tiêu chuẩn vật tư, đảm bảo độ bền bỉ và tuổi thọ trên 20 năm cho mỗi công trình." },
+          { title: "Hội thảo: Giải pháp di chuyển an toàn cho người cao tuổi", cat: "Sự kiện", sum: "Cùng các chuyên gia y tế và kỹ sư phân tích tầm quan trọng của hệ thống cứu hộ tự động trong thang máy gia đình." },
+          { title: "Cải tiến công nghệ ARD: Cứu hộ tự động thế hệ mới", cat: "Tin tức", sum: "Hệ thống UPS siêu tụ điện giúp thang máy tự động về bờ an toàn ngay cả khi sự cố mất điện kéo dài xảy ra." },
+          { title: "Lễ bàn giao dự án thang máy nghệ thuật tại Vinhomes", cat: "Hoạt động", sum: "Fujirise hoàn thiện kiệt tác thang máy mạ vàng PVD, trở thành điểm nhấn xa hoa giữa không gian biệt thự tân cổ điển." },
+          { title: "Ngày hội tri ân: Bảo dưỡng miễn phí, an tâm trọn đời", cat: "Sự kiện", sum: "Chương trình chăm sóc đặc biệt dành cho 500 khách hàng đầu tiên trong năm với gói bảo dưỡng chuyên sâu 12 bước." },
+          { title: "Thang máy cá nhân hóa: Lên ngôi trong giới tinh hoa", cat: "Tin tức", sum: "Khám phá xu hướng tự thiết kế cabin thang máy theo phong thủy và gu thẩm mỹ độc bản của gia chủ." },
+          { title: "Kỹ sư Fujirise hoàn thành khóa đào tạo tại Châu Âu", cat: "Hoạt động", sum: "Đội ngũ nòng cốt vừa trở về sau 3 tháng tu nghiệp, mang theo chuẩn mực lắp đặt thang máy gia đình khắt khe nhất." },
+          { title: "Khai trương Showroom trải nghiệm thang máy thực tế ảo", cat: "Sự kiện", sum: "Khách hàng giờ đây có thể tự do phối màu, chọn vật liệu cabin bằng công nghệ VR ngay tại showroom mới của Fujirise." }
+        ];
+
+        const dummyPosts = postData.map((d, i) => ({
+          id: Date.now() + i,
+          title: d.title,
+          category: d.cat,
+          summary: d.sum,
+          content: `Đây là nội dung chi tiết cho bài viết: **${d.title}**.\n\nSự kiện này đánh dấu sự phát triển vượt bậc của hệ sinh thái thang máy gia đình. Fujirise cam kết mang đến sự an toàn, thiết kế sang trọng và trải nghiệm dịch vụ xuất sắc.\n\n[img:1]\n\nKính mời quý khách hàng theo dõi thêm các hoạt động sắp tới của chúng tôi.`,
+          images: [
+            `https://images.unsplash.com/photo-1555505012-1c94d6983d7b?auto=format&fit=crop&q=80&w=400&sig=${i}`,
+            `https://images.unsplash.com/photo-1515260268569-9271009adfdb?auto=format&fit=crop&q=80&w=400&sig=${i+1}`,
+            `https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=400&sig=${i+2}`
+          ],
+          imageUrl: `https://images.unsplash.com/photo-1555505012-1c94d6983d7b?auto=format&fit=crop&q=80&w=400&sig=${i}`,
+          createdAt: new Date(Date.now() - i * 86400000).toISOString(),
+        }));
+        setPosts(dummyPosts as Post[]);
+        // Tự động lưu 10 bài viết mẫu vào DB
+        const currentDict = data?.content_dict || {};
+        currentDict.posts = dummyPosts;
+        await supabase.from('site_settings').update({ content_dict: currentDict }).eq('id', 'default');
       }
     };
     fetchPosts();
@@ -1637,11 +1702,11 @@ function NewsManager() {
     if (!files.length || !isEditing) return;
 
     const currentImages = isEditing?.images || [];
-    const slotsLeft = 10 - currentImages.length;
+    const slotsLeft = 30 - currentImages.length;
     const filesToUpload = files.slice(0, slotsLeft);
 
     if (files.length > slotsLeft) {
-      alert(`Chỉ có thể thêm tối đa 10 ảnh. Đã bỏ qua ${files.length - slotsLeft} ảnh.`);
+      alert(`Chỉ có thể thêm tối đa 30 ảnh. Đã bỏ qua ${files.length - slotsLeft} ảnh.`);
     }
 
     try {
@@ -1660,7 +1725,7 @@ function NewsManager() {
 
       setIsEditing(prev => {
         if (!prev) return null;
-        const updatedImages = [...(prev.images || []), ...newUrls].slice(0, 10);
+        const updatedImages = [...(prev.images || []), ...newUrls].slice(0, 30);
         return { ...prev, images: updatedImages, imageUrl: updatedImages[0] };
       });
     } catch (error) {
@@ -1690,6 +1755,7 @@ function NewsManager() {
         summary: formData.get('summary') as string,
         content: formData.get('content') as string,
         link: formData.get('link') as string,
+        createdAt: formData.get('createdAt') ? new Date(formData.get('createdAt') as string).toISOString() : isEditing.createdAt,
       };
 
       let newPosts;
@@ -1726,6 +1792,23 @@ function NewsManager() {
     setPosts(newPosts);
   };
 
+  const handleApproveComment = (commentId: string) => {
+    setIsEditing(prev => {
+      if (!prev) return prev;
+      const updatedComments = (prev.comments || []).map((c: any) => c.id === commentId ? { ...c, isApproved: true } : c);
+      return { ...prev, comments: updatedComments };
+    });
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    if (!confirm('Bạn có chắc muốn xóa bình luận này?')) return;
+    setIsEditing(prev => {
+      if (!prev) return prev;
+      const updatedComments = (prev.comments || []).filter((c: any) => c.id !== commentId);
+      return { ...prev, comments: updatedComments };
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -1733,27 +1816,82 @@ function NewsManager() {
           <h2 className="text-3xl font-black text-fuji-blue tracking-tighter uppercase">Tin tức & Sự kiện</h2>
           <p className="text-xs text-slate-400 mt-1 uppercase font-black tracking-widest italic">Quản lý bài viết, hoạt động, quảng cáo</p>
         </div>
-        <button
-          onClick={() => setIsEditing({ id: Date.now(), title: '', category: 'Tin tức', summary: '', content: '', images: [], imageUrl: '', createdAt: new Date().toISOString() })}
-          className="px-6 py-3 bg-fuji-accent text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 group hover:bg-fuji-blue transition-all"
-        >
-          <Plus size={16} /> Thêm bài viết
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={async () => {
+              if(!confirm('Thêm 10 bài viết mẫu về thang máy vào danh sách?')) return;
+              const postData = [
+                { title: "Triển lãm Công nghệ Thang máy Gia đình Quốc tế 2024", cat: "Sự kiện", sum: "Fujirise hân hạnh góp mặt tại triển lãm công nghệ lớn nhất năm với hệ sinh thái thang máy thông minh mới nhất." },
+                { title: "Ra mắt dòng thang máy kính không hố pit hoàn toàn mới", cat: "Tin tức", sum: "Giải pháp đột phá cho nhà cải tạo: Thang máy kính 360 độ không yêu cầu đào sâu nền móng, giữ nguyên cấu trúc nhà." },
+                { title: "Fujirise ký kết đối tác chiến lược với hãng linh kiện Nhật Bản", cat: "Hoạt động", sum: "Đánh dấu bước ngoặt trong việc nâng cấp tiêu chuẩn vật tư, đảm bảo độ bền bỉ và tuổi thọ trên 20 năm cho mỗi công trình." },
+                { title: "Hội thảo: Giải pháp di chuyển an toàn cho người cao tuổi", cat: "Sự kiện", sum: "Cùng các chuyên gia y tế và kỹ sư phân tích tầm quan trọng của hệ thống cứu hộ tự động trong thang máy gia đình." },
+                { title: "Cải tiến công nghệ ARD: Cứu hộ tự động thế hệ mới", cat: "Tin tức", sum: "Hệ thống UPS siêu tụ điện giúp thang máy tự động về bờ an toàn ngay cả khi sự cố mất điện kéo dài xảy ra." },
+                { title: "Lễ bàn giao dự án thang máy nghệ thuật tại Vinhomes", cat: "Hoạt động", sum: "Fujirise hoàn thiện kiệt tác thang máy mạ vàng PVD, trở thành điểm nhấn xa hoa giữa không gian biệt thự tân cổ điển." },
+                { title: "Ngày hội tri ân: Bảo dưỡng miễn phí, an tâm trọn đời", cat: "Sự kiện", sum: "Chương trình chăm sóc đặc biệt dành cho 500 khách hàng đầu tiên trong năm với gói bảo dưỡng chuyên sâu 12 bước." },
+                { title: "Thang máy cá nhân hóa: Lên ngôi trong giới tinh hoa", cat: "Tin tức", sum: "Khám phá xu hướng tự thiết kế cabin thang máy theo phong thủy và gu thẩm mỹ độc bản của gia chủ." },
+                { title: "Kỹ sư Fujirise hoàn thành khóa đào tạo tại Châu Âu", cat: "Hoạt động", sum: "Đội ngũ nòng cốt vừa trở về sau 3 tháng tu nghiệp, mang theo chuẩn mực lắp đặt thang máy gia đình khắt khe nhất." },
+                { title: "Khai trương Showroom trải nghiệm thang máy thực tế ảo", cat: "Sự kiện", sum: "Khách hàng giờ đây có thể tự do phối màu, chọn vật liệu cabin bằng công nghệ VR ngay tại showroom mới của Fujirise." }
+              ];
+              const dummyPosts = postData.map((d, i) => ({
+                id: Date.now() + i, title: d.title, category: d.cat, summary: d.sum, content: `Đây là nội dung chi tiết cho bài viết: **${d.title}**.\n\nSự kiện này đánh dấu sự phát triển vượt bậc của hệ sinh thái thang máy gia đình. Fujirise cam kết mang đến sự an toàn, thiết kế sang trọng và trải nghiệm dịch vụ xuất sắc.\n\n[img:1]\n\nKính mời quý khách hàng theo dõi thêm các hoạt động sắp tới của chúng tôi.`,
+                images: [`https://images.unsplash.com/photo-1555505012-1c94d6983d7b?auto=format&fit=crop&q=80&w=400&sig=${i}`, `https://images.unsplash.com/photo-1515260268569-9271009adfdb?auto=format&fit=crop&q=80&w=400&sig=${i+1}`, `https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=400&sig=${i+2}`],
+                imageUrl: `https://images.unsplash.com/photo-1555505012-1c94d6983d7b?auto=format&fit=crop&q=80&w=400&sig=${i}`,
+                createdAt: new Date(Date.now() - i * 86400000).toISOString(),
+              }));
+              const newPosts = [...dummyPosts, ...posts];
+              const { data } = await supabase.from('site_settings').select('content_dict').eq('id', 'default').single();
+              const currentDict = data?.content_dict || {};
+              currentDict.posts = newPosts;
+              await supabase.from('site_settings').update({ content_dict: currentDict }).eq('id', 'default');
+              setPosts(newPosts);
+              alert('Đã thêm 10 bài viết mẫu thành công!');
+            }}
+            className="px-4 py-3 bg-slate-100 text-slate-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+          >
+            Tạo 10 bài test
+          </button>
+          <button
+            onClick={() => setIsEditing({ id: Date.now(), title: '', category: 'Tin tức', summary: '', content: '', images: [], imageUrl: '', createdAt: new Date().toISOString() })}
+            className="px-6 py-3 bg-fuji-accent text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 group hover:bg-fuji-blue transition-all"
+          >
+            <Plus size={16} /> Thêm bài viết
+          </button>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {posts.map(post => (
-          <div key={post.id} className="bg-white rounded-[40px] p-6 shadow-sm border border-slate-100 group">
-            <div className="h-48 rounded-[30px] overflow-hidden mb-6 relative">
-              <img src={post.images?.[0] || post.imageUrl} alt={post.title} className="w-full h-full object-cover" />
-              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => setIsEditing(post)} className="w-8 h-8 bg-white/80 backdrop-blur-sm text-fuji-blue rounded-lg flex items-center justify-center shadow-lg hover:bg-fuji-blue hover:text-white"><Edit2 size={14} /></button>
-                <button onClick={() => handleDelete(post.id)} className="w-8 h-8 bg-white/80 backdrop-blur-sm text-red-500 rounded-lg flex items-center justify-center shadow-lg hover:bg-red-500 hover:text-white"><Trash2 size={14} /></button>
+          <div key={post.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 group flex flex-col">
+            <div className="h-28 rounded-xl overflow-hidden mb-3 relative flex gap-1">
+              {post.images && post.images.length > 1 ? (
+                <>
+                  <img src={post.images[0]} alt={post.title} className="w-2/3 h-full object-cover" />
+                  <div className="w-1/3 flex flex-col gap-1">
+                    <img src={post.images[1]} className="w-full h-1/2 object-cover" />
+                    {post.images[2] ? (
+                      <img src={post.images[2]} className="w-full h-1/2 object-cover" />
+                    ) : (
+                      <div className="w-full h-1/2 bg-slate-50" />
+                    )}
+                  </div>
+                </>
+              ) : (
+                <img src={post.images?.[0] || post.imageUrl} alt={post.title} className="w-full h-full object-cover" />
+              )}
+              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => setIsEditing(post)} className="w-6 h-6 bg-white/80 backdrop-blur-sm text-fuji-blue rounded flex items-center justify-center shadow hover:bg-fuji-blue hover:text-white"><Edit2 size={12} /></button>
+                <button onClick={() => handleDelete(post.id)} className="w-6 h-6 bg-white/80 backdrop-blur-sm text-red-500 rounded flex items-center justify-center shadow hover:bg-red-500 hover:text-white"><Trash2 size={12} /></button>
               </div>
             </div>
-            <span className="px-3 py-1 bg-fuji-accent/10 text-fuji-accent rounded-full text-[9px] font-black uppercase tracking-widest">{post.category}</span>
-            <h4 className="font-black text-fuji-blue tracking-tight mt-3 mb-2 h-10 line-clamp-2">{post.title}</h4>
-            <p className="text-[10px] text-slate-400 font-medium line-clamp-2">{post.summary}</p>
+        <div className="flex justify-between items-center mb-2">
+          <span className="px-2 py-0.5 bg-fuji-accent/10 text-fuji-accent rounded text-[8px] font-black uppercase tracking-wider">{post.category}</span>
+          <div className="flex items-center gap-2 text-slate-400 text-[9px] font-bold">
+            <span className="flex items-center gap-0.5"><ThumbsUp size={10} /> {(post as any).likes || 0}</span>
+            <span className="flex items-center gap-0.5"><MessageSquare size={10} /> {((post as any).comments || []).length}</span>
+          </div>
+        </div>
+        <h4 className="font-serif font-bold text-slate-800 text-xs tracking-tighter leading-tight mb-1 line-clamp-2">{post.title}</h4>
+        <p className="text-[10px] text-slate-500 font-sans leading-snug line-clamp-3">{post.summary}</p>
           </div>
         ))}
       </div>
@@ -1769,10 +1907,11 @@ function NewsManager() {
                 <Input name="category" label="Chuyên mục" defaultValue={isEditing.category} placeholder="Tin tức, Sự kiện,..." />
                 <Input name="link" label="Link chi tiết (nếu có)" defaultValue={isEditing.link} />
               </div>
+              <Input name="createdAt" type="datetime-local" label="Ngày giờ đăng bài" defaultValue={isEditing.createdAt ? new Date(new Date(isEditing.createdAt).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''} required />
               <Textarea name="summary" label="Mô tả ngắn" defaultValue={isEditing.summary} rows={3} />
-              <Textarea name="content" label="Nội dung chi tiết bài viết" defaultValue={isEditing.content} rows={10} />
+              <RichTextEditor name="content" label="Nội dung chi tiết (Bôi đen chữ và sử dụng thanh công cụ bên dưới)" defaultValue={isEditing.content} />
               <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">Hình ảnh bài viết (Tối đa 10 ảnh)</label>
+                <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">Hình ảnh bài viết (Tối đa 30 ảnh - Dùng [img:1], [img:2] để chèn)</label>
                 <div className="flex flex-col gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                   { (isEditing.images && isEditing.images.length > 0) && (
                     <div className="flex flex-wrap gap-3">
@@ -1786,7 +1925,7 @@ function NewsManager() {
                       ))}
                     </div>
                   )}
-                  {(!isEditing.images || isEditing.images.length < 10) && (
+                  {(!isEditing.images || isEditing.images.length < 30) && (
                     <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="w-full text-xs font-bold text-slate-500 cursor-pointer" />
                   )}
                 </div>
@@ -1949,6 +2088,45 @@ function Textarea({ label, ...props }: React.TextareaHTMLAttributes<HTMLTextArea
     <div className="space-y-1">
        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">{label}</label>
        <textarea {...props} rows={props.rows || 2} className="w-full px-6 py-4 bg-slate-50 rounded-2xl border-none outline-none font-bold text-fuji-blue focus:bg-white focus:ring-2 focus:ring-fuji-accent/10 transition-all resize-none" />
+    </div>
+  );
+}
+
+function RichTextEditor({ name, label, defaultValue }: { name: string, label: string, defaultValue?: string }) {
+  const [val, setVal] = React.useState(defaultValue || '');
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const insertText = (before: string, after: string = '') => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end);
+    const newVal = text.substring(0, start) + before + selected + after + text.substring(end);
+    setVal(newVal);
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
+    }, 0);
+  };
+
+  return (
+    <div className="space-y-1">
+       <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 ml-4 mb-1 block">{label}</label>
+       <div className="bg-slate-50 rounded-2xl border-none overflow-hidden focus-within:ring-2 focus-within:ring-fuji-accent/10 transition-all border border-slate-100">
+          <div className="flex flex-wrap gap-2 p-3 bg-slate-200/50 border-b border-slate-100">
+            <button type="button" onClick={() => insertText('**', '**')} className="px-3 py-1.5 bg-white rounded-lg shadow-sm text-xs font-black hover:bg-fuji-blue hover:text-white transition-colors" title="In đậm">B</button>
+            <button type="button" onClick={() => insertText('1. ')} className="px-3 py-1.5 bg-white rounded-lg shadow-sm text-xs font-black hover:bg-fuji-blue hover:text-white transition-colors" title="Tiêu đề lớn (Heading 1)">H1</button>
+            <button type="button" onClick={() => insertText('1.1. ')} className="px-3 py-1.5 bg-white rounded-lg shadow-sm text-xs font-black hover:bg-fuji-blue hover:text-white transition-colors" title="Tiêu đề phụ (Heading 2)">H2</button>
+            <button type="button" onClick={() => insertText('> ')} className="px-3 py-1.5 bg-white rounded-lg shadow-sm text-xs font-black hover:bg-fuji-blue hover:text-white transition-colors flex items-center gap-1" title="Khối trích dẫn (Quote)"><Quote size={12} /> Quote</button>
+            <div className="w-px h-6 bg-slate-300 mx-1" />
+            <button type="button" onClick={() => insertText('[img:1]\n', '')} className="px-3 py-1.5 bg-white rounded-lg shadow-sm text-xs font-black text-fuji-accent hover:bg-fuji-accent hover:text-white transition-colors" title="Chèn vị trí Ảnh 1">Ảnh 1</button>
+            <button type="button" onClick={() => insertText('[img:2]\n', '')} className="px-3 py-1.5 bg-white rounded-lg shadow-sm text-xs font-black text-fuji-accent hover:bg-fuji-accent hover:text-white transition-colors" title="Chèn vị trí Ảnh 2">Ảnh 2</button>
+            <button type="button" onClick={() => insertText('[img:3]\n', '')} className="px-3 py-1.5 bg-white rounded-lg shadow-sm text-xs font-black text-fuji-accent hover:bg-fuji-accent hover:text-white transition-colors" title="Chèn vị trí Ảnh 3">Ảnh 3</button>
+          </div>
+          <textarea ref={textareaRef} name={name} value={val} onChange={(e) => setVal(e.target.value)} rows={20} className="w-full px-6 py-4 bg-transparent border-none outline-none font-medium text-slate-700 resize-y leading-relaxed" />
+       </div>
     </div>
   );
 }

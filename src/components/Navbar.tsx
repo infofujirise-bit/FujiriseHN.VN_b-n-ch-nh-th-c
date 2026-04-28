@@ -95,7 +95,7 @@ export default function Navbar() {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-[9px] xl:text-[11px] font-black uppercase tracking-[0.1em] xl:tracking-[0.2em] text-slate-500 hover:text-fuji-blue transition-all relative group/item whitespace-nowrap"
+                className="text-[9px] xl:text-[11px] font-black uppercase tracking-[0.1em] xl:tracking-[0.2em] text-fuji-blue hover:text-fuji-accent transition-all relative group/item whitespace-nowrap"
               >
                 {item.name}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-fuji-accent transition-all group-hover/item:w-full" />
@@ -151,7 +151,7 @@ export default function Navbar() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsOpen(false)}
-                    className="text-lg font-medium text-slate-800 hover:text-fuji-blue flex items-center justify-between"
+                    className="text-lg font-medium text-fuji-blue hover:text-fuji-accent flex items-center justify-between group"
                   >
                     {item.name}
                     <div className="w-1.5 h-1.5 bg-fuji-blue rounded-full opacity-0 group-hover:opacity-100" />
@@ -167,13 +167,13 @@ export default function Navbar() {
                   <div className="flex gap-4">
                     <a
                       href={CONTACT_INFO.facebook}
-                      className="p-2 border rounded-full text-blue-600"
+                      className="p-2 border rounded-full text-blue-600 hover:bg-slate-50"
                     >
                       <Facebook size={20} />
                     </a>
                     <a
                       href={CONTACT_INFO.zalo}
-                      className="p-2 border rounded-full text-blue-400"
+                      className="p-2 border rounded-full text-blue-400 hover:bg-slate-50"
                     >
                       <MessageCircle size={20} />
                     </a>
