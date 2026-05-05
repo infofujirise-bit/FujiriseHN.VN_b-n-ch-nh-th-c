@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getCachedSettings, DUMMY_POSTS } from '../constants';
 import { supabase, Post } from '../lib/supabase';
-import { ArrowLeft, Clock, ThumbsUp, ExternalLink, Facebook, Twitter, Linkedin, Link2, Quote } from 'lucide-react';
+import { ArrowLeft, Clock, ThumbsUp, ExternalLink, Facebook, Twitter, Linkedin, Link2, Image as ImageIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { sendToTelegram } from '../lib/telegram';
 import Navbar from '../components/Navbar';
