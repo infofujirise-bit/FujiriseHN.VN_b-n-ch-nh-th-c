@@ -2843,6 +2843,7 @@ function ImageCropperModal({ imageUrl, onSave, onCancel }: { imageUrl: string, o
   const [zoom, setZoom] = React.useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = React.useState(null)
   const [isSaving, setIsSaving] = React.useState(false)
+  const [aspect, setAspect] = React.useState(3 / 4) // Mặc định 3:4 dọc cho sản phẩm
 
   const onCropComplete = React.useCallback((_: any, croppedAreaPixels: any) => setCroppedAreaPixels(croppedAreaPixels), [])
 
@@ -2866,9 +2867,18 @@ function ImageCropperModal({ imageUrl, onSave, onCancel }: { imageUrl: string, o
   return (
     <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 md:p-10">
        <div className="relative w-full max-w-4xl h-[60vh] bg-black/50 rounded-[40px] overflow-hidden mb-6 border border-white/10 shadow-2xl">
-          <Cropper image={imageUrl} crop={crop} zoom={zoom} onCropChange={setCrop} onZoomChange={setZoom} onCropComplete={onCropComplete} />
+          <Cropper image={imageUrl} crop={crop} zoom={zoom} aspect={aspect} onCropChange={setCrop} onZoomChange={setZoom} onCropComplete={onCropComplete} />
        </div>
        <div className="flex flex-col gap-4 w-full max-w-lg bg-white/10 backdrop-blur-md p-8 rounded-[40px] border border-white/10 shadow-2xl">
+          <div className="flex flex-col gap-3 mb-2">
+            <label className="text-white text-[10px] font-black uppercase tracking-widest text-center">Tỉ lệ khung hình (Aspect Ratio)</label>
+            <div className="flex flex-wrap justify-center gap-2">
+              <button onClick={() => setAspect(3/4)} className={cn("px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", aspect === 3/4 ? "bg-fuji-accent text-white shadow-lg" : "bg-white/10 text-white/50 hover:bg-white/20 hover:text-white")}>3:4 (Sản phẩm)</button>
+              <button onClick={() => setAspect(16/9)} className={cn("px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", aspect === 16/9 ? "bg-fuji-accent text-white shadow-lg" : "bg-white/10 text-white/50 hover:bg-white/20 hover:text-white")}>16:9 (Banner)</button>
+              <button onClick={() => setAspect(4/3)} className={cn("px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", aspect === 4/3 ? "bg-fuji-accent text-white shadow-lg" : "bg-white/10 text-white/50 hover:bg-white/20 hover:text-white")}>4:3 (Ngang)</button>
+              <button onClick={() => setAspect(1)} className={cn("px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all", aspect === 1 ? "bg-fuji-accent text-white shadow-lg" : "bg-white/10 text-white/50 hover:bg-white/20 hover:text-white")}>1:1 (Vuông)</button>
+            </div>
+          </div>
           <label className="text-white text-[10px] font-black uppercase tracking-widest text-center flex items-center justify-between">
             <span>Thu phóng (Zoom)</span> <span className="text-fuji-accent">{Math.round(zoom * 100)}%</span>
           </label>
